@@ -28,9 +28,6 @@ var dev = {
 	plugins: [
 		new webpack.HotModuleReplacementPlugin(),
 	],
-	output: {
-		// publicPath: 'http://localhost:8080/',
-	},
 }
 
 

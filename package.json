@@ -4,7 +4,8 @@
   "description": "experimental",
   "main": "src/index.js",
   "scripts": {
-    "start": "(cd docs; webpack-dev-server)"
+    "start": "(cd docs; webpack-dev-server)",
+    "build": "(cd docs; webpack -p)"
   },
   "author": "andy",
   "license": "UNLICENSED",
