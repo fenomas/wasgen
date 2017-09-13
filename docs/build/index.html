@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Audio test</title>
+	<style type="text/css">
+		html,
+		body {
+			height: 100%;
+			font: 300 18px "Helvetica Neue", Meiryo, Helvetica, sans-serif;
+		}
+
+		button {
+			margin: 0.5rem;
+			font: 300 24px "Helvetica Neue", Meiryo, Helvetica, sans-serif;
+		}
+
+		#ui {
+			margin: 2rem 1rem;
+			display: flex;
+			flex-flow: column wrap;
+			height: 125%;
+		}
+
+		.column {
+			height: 100%;
+			margin: 1rem;
+		}
+
+		.item {
+			display: block;
+			margin: 0.8rem;
+		}
+
+		.item-inline {
+			display: inline-block;
+			margin: 0.8rem;
+		}
+
+		label {
+			cursor: pointer;
+		}
+
+		select#presets {
+			font: 300 15px "Helvetica Neue", Meiryo, Helvetica, sans-serif;
+			margin: 0.5rem;
+		}
+
+		#play {
+			padding: 0.5rem;
+			width: 280px;
+		}
+
+		.dg .close-button {
+			display: none;
+		}
+
+		.dg.main {
+			margin: 0.5rem;
+		}
+
+		canvas {
+			display: block;
+			border: 1px solid gray;
+		}
+
+		#progText {
+			width: 95%;
+			height: 5rem;
+			font: 300 12px monospace;
+			white-space: nowrap;
+			overflow: auto;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="ui">
+		<div class="column">
+			<button class="item" id="play">Play</button>
+			<label class="item" id="presetLabel">
+				Presets: <select id="presets"></select>
+			</label>
+			<textarea id="progText" class="item"></textarea>
+			<div class="item" id="menus"></div>
+		</div>
+		<div class="column">
+			<label class="item-inline">
+				<input type="checkbox" id="viz"> Visualize
+			</label>
+			<label class="item-inline">
+				<input type="checkbox" id="quality" checked> Quality
+			</label>
+			<canvas class="item" id="waveform" width="450" height="120"></canvas>
+			<canvas class="item" id="eq" width="450" height="120"></canvas>
+			<canvas class="item" id="spectrograph" width="450" height="120"></canvas>
+		</div>
+	</div>
+
+
+	<script src="bundle.js"></script>
+</body>
+
+</html>
