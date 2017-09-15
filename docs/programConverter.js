@@ -13,6 +13,9 @@ module.exports = function makeConverter(gen, tsProg) {
         for (var s in defp) sig[s] = defp[s]
         for (var s2 in pn) sig[s2] = pn[s2]
 
+        // remove clicks :/
+        if (sig.a < 0.003) sig.a = 0.003
+
         // always a sweep for frequency, always an envelope for gain
         var freq = new gen.Sweep(sig.t, sig.f, sig.p, sig.q)
         var gain = new gen.Envelope(sig.v, sig.a, sig.h, sig.d, sig.s, sig.r, sig.k)

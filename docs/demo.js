@@ -112,9 +112,13 @@ function keyToNote(k) {
 }
 
 function down(ev) {
+    var focused = document.activeElement
+    if (focused.type === 'text' || focused.type === 'textarea') return
     var key = (ev.key) || 'a'
     var note = keyToNote(key)
     if (note) playNote(note)
+    if (key === ' ') ev.preventDefault()
+    if (note && focused.tagName === 'SELECT' && !ev.metaKey) ev.preventDefault()
 }
 function up(ev) {
     var key = (ev.key) || 'a'

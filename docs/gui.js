@@ -62,9 +62,10 @@ progText.oninput = function (ev) {
     try {
         eval('parsed = ' + txt.split('\n').join(' '))
     } catch (e) { }
-    var itworked = parsed && parsed.length && parsed[0]
-    if (itworked) onChange(parsed)
-    progText.style.backgroundColor = (itworked) ? '#fff' : '#fee'
+    var okay = parsed && parsed.length && parsed[0]
+    if (okay) parsed.forEach(o => okay = okay && (typeof o === 'object'))
+    if (okay) onChange(parsed)
+    progText.style.backgroundColor = (okay) ? '#fff' : '#fee'
 }
 
 
@@ -75,11 +76,11 @@ function showProgramText(prog) {
 
 function removeDefaults(prog) {
     var fill = function (prop, src, tgt, def) {
-        if (src[prop] === undefined) return
+        if (!src || src[prop] === undefined) return
         if (src[prop] !== def[prop]) tgt[prop] = src[prop]
     }
     return prog.map(obj => {
-        var ret = { freq: {}, gain: {} }
+        var ret = { type: 'sine', freq: {}, gain: {} }
         sigProps.forEach(p => fill(p, obj, ret, defSig))
         sweepProps.forEach(p => fill(p, obj.freq, ret.freq, defSig.freq))
         envProps.forEach(p => fill(p, obj.freq, ret.freq, defSig.freq))
