@@ -124,8 +124,7 @@ function Player(ctx, dest) {
         this.released = false
         this.endTime = +0
         // audio nodes
-        this.sources = []
-        this.gains = []
+        this.nodes = []
         // envelope nodes and values
         this.envParams = []
         this.envAttacks = []
@@ -151,73 +150,148 @@ function Player(ctx, dest) {
         var note = new Note(time)
 
         var signalFreqs = []
+        var sourceNodes = []
+        var gainNodes = []
+        var destChain = []
+        var lineOuts = []
+
         for (var i = 0; i < program.length; i++) {
             var signal = program[i]
 
             // this is sugar to make the UI work easier
             if (signal.type === 'none') continue
 
+            // create the initial node (oscillator, buffer, or filter)
+            var src = sources.createSource(signal.type || 'sine')
+            if (src.start) src.start(time)
+            note.nodes.push(src)
+            sourceNodes[i] = src
+            var currOutput = src
+
             // parse target
             var target = -1
             var targetProp = ''
             if (signal.target) {
-                var split = signal.target.split('.')
-                target = parseInt(split[0])
-                targetProp = split[1]
+                target = parseInt(signal.target)
+                var dot = signal.target.indexOf('.')
+                if (dot > -1) targetProp = signal.target.substr(dot + 1)
             }
 
-            // create the source node (oscillator or bufferSource)
-            var src = sources.createSource(signal.type || 'sine')
-            src.start(time)
+            // make a gain node if the source needs one, and connect it up
+            var gainParam = src.gain
+            if (!gainParam) {
+                var gainNode = ctx.createGain()
+                note.nodes.push(gainNode)
+                src.connect(gainNode)
+                currOutput = gainNode
+                gainParam = gainNode.gain
+                gainNodes[i] = gainNode
+            }
 
-            // set up source frequency param and remember base/peak value in signalFreqs
+            // apply gain program unless source node ignores gain
+            if (sources.usesGain(src)) {
+                var gBase = (target < 0) ? vol * vol : 1
+                var targetPBR = false
+                if (target >= 0 && targetProp === 'freq') {
+                    gBase = signalFreqs[target]
+                    if (sourceNodes[target].playbackRate) targetPBR = true
+                }
+                var gProg = (isSet(signal.gain)) ? signal.gain : defEnv
+                // console.log('setting gain ', i)
+                var res = params.apply(note, gainParam, time, gBase, gProg, freq, targetPBR)
+            }
+
+            // apply frequency program, defaulting to an empty sweep
             var fqBase = (target < 0) ? freq : signalFreqs[target]
+            var fqProg = (isSet(signal.freq)) ? signal.freq : defSweep
             var isPBR = !!src.playbackRate
             var fqParam = (isPBR) ? src.playbackRate : src.frequency
-            // treat empty freq param program as a blank sweep
-            var fqProg = signal.freq || defSweep
-            if (Object.keys(fqProg).length === 0) fqProg = defSweep
+            // console.log('setting freq ', i)
             signalFreqs[i] = params.apply(note, fqParam, time, fqBase, fqProg, freq, isPBR)
+            //   ..and remember base/peak value in signalFreqs
 
-            // set up the gain node
-            var gain = ctx.createGain()
-            var gBase = (target < 0) ? vol * vol
-                : (targetProp === 'freq') ? signalFreqs[target]
-                    : 1
-            var gProg = signal.gain || defEnv
-            if (Object.keys(gProg).length === 0) gProg = defEnv
-            var peakGain = params.apply(note, gain.gain, time, gBase, gProg, freq)
-
-            // destination
-            var connectTo = dest
-            if (target >= 0) {
-                if (targetProp === 'freq') {
-                    var node = note.sources[target]
-                    connectTo = node.frequency || node.playbackRate
-                } else if (targetProp === 'gain') {
-                    connectTo = note.gains[target].gain
-                } else {
-                    console.warn('NYI -- unknown target prop', targetProp)
-                }
+            // effects can have a Q value and program
+            if (src.Q && isSet(signal.Q) && sources.usesQ(src)) {
+                // console.log('setting Q ', i)
+                params.apply(note, src.Q, time, 1, signal.Q, freq)
             }
 
-            // node connection chain
-            src.connect(gain)
-            gain.connect(connectTo)
+            // nodes and params ready, prepare connection chains
 
-            // store nodes
-            note.sources[i] = src
-            note.gains[i] = gain
+            // if src is an effect, put it somewhere in the output chain
+            if (sources.isEffect(src)) {
+                if (target < 0 || !lineOuts[target]) {
+                    destChain.push(src)
+                } else {
+                    lineOuts[target].connect(src)
+                    lineOuts[target] = src
+                }
+            } else {
+                // src is an oscillator/buffer:
+                if (target < 0) {
+                    // signal is start of a lineout chain
+                    lineOuts[i] = currOutput
+
+                } else {
+                    // signal drives a property somewhere
+                    var paramTgt
+                    if (targetProp === 'freq') {
+                        var nodeTgt = sourceNodes[target]
+                        paramTgt = nodeTgt.frequency || nodeTgt.playbackRate
+                    } else if (targetProp === 'Q') {
+                        paramTgt = sourceNodes[target].Q
+                    } else if (targetProp === 'gain') {
+                        paramTgt = gainNodes[target].gain
+                    } else {
+                        console.warn('NYI -- unknown target prop', targetProp)
+                    }
+                    if (paramTgt) {
+                        currOutput.connect(paramTgt)
+                    }
+                }
+            }
+            // end of per-signal handling
         }
+
+        // process stored nodes into output chain
+        destChain.push(dest)
+        var currDest = destChain[0]
+        for (var j = 0; j < lineOuts.length; j++) {
+            if (lineOuts[j]) {
+                lineOuts[j].connect(currDest)
+            }
+        }
+        for (var k = 1; k < destChain.length; k++) {
+            currDest.connect(destChain[k])
+            currDest = destChain[k]
+        }
+
+        // sanity
+        signalFreqs.length = 0
+        sourceNodes.length = 0
+        gainNodes.length = 0
+        destChain.length = 0
+        lineOuts.length = 0
+
         notesHeld++
         return note
     }
 
 
+    function isSet(o) {
+        if (typeof o === 'number') return true
+        return !!(o && Object.keys(o).length)
+    }
 
 
 
-    // release - set release envelopes if there are any, etc.
+
+    /*
+     * 
+     *      RELEASE
+     *  set release envelopes if there are any, etc.
+     * 
+    */
 
     function releaseNote(note, time) {
         if (note.released) return
@@ -249,17 +323,21 @@ function Player(ctx, dest) {
 
 
 
+    /*
+     * 
+     *      DISPOSAL
+     * 
+    */
+
     function disposeNote(note) {
         var time = ctx.currentTime
-        note.sources.forEach(node => {
+        note.nodes.forEach(node => {
             node.disconnect()
+            if (node.gain) node.gain.cancelScheduledValues(time)
             if (node.frequency) node.frequency.cancelScheduledValues(time)
             if (node.playbackRate) node.playbackRate.cancelScheduledValues(time)
-            node.stop()
-        })
-        note.gains.forEach(node => {
-            node.disconnect()
-            node.gain.cancelScheduledValues(time)
+            if (node.Q) node.Q.cancelScheduledValues(time)
+            if (node.stop) node.stop()
         })
         for (var s in note) if (note[s].length) note[s].length = 0
     }

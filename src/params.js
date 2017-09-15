@@ -71,6 +71,8 @@ function Params() {
         var target = value * prog.p
         if (bend) param.setTargetAtTime(target, time, prog.q)
 
+        // console.log('   param sweep:', value, bend ? ' --> ' + target : '')
+
         if (prog.j && prog.jt) {
             var js = prog.j.split(',').map(s => parseFloat(s))
             var jts = prog.jt.split(',').map(s => parseFloat(s))
@@ -104,9 +106,9 @@ function Params() {
 
     // apply an envelope program
     function applyParamEnvelope(note, param, time, peak, prog, valueMult) {
+        param.value = 0
         peak = peak * prog.v * valueMult
         if (prog.a > 0) {
-            param.value = 0
             param.setValueAtTime(0, time)
             param.linearRampToValueAtTime(peak, time + prog.a)
         } else {
@@ -122,6 +124,8 @@ function Params() {
         note.envPeaks.push(peak)
         note.envReleases.push(prog.r || 0)
 
+        // console.log('   param env:  0 -> ', peak, ' -> ' , peak * prog.s, ' -> 0')
+        
         return peak / valueMult
     }
 

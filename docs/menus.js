@@ -58,10 +58,28 @@ var currProg = { freq: {}, gain: {} }
 */
 
 
-var defSig = new defs.Signal('', '', new defs.Sweep(), new defs.Envelope())
+var defSig = new defs.Signal('', '', new defs.Sweep(), new defs.Envelope(), {})
 
 var sweepProps = ['t', 'f', 'p', 'q', 'k', 'j', 'jt']
 var envProps = ['v', 'a', 'h', 'd', 's', 'r', 'k']
+var sigTypes = [
+    'sine',
+    'square',
+    'triangle',
+    'sawtooth',
+    'n0',
+    'n1',
+    'np',
+    'w9999',
+    'lowpass',
+    'highpass',
+    'bandpass',
+    'lowshelf',
+    'highshelf',
+    'peaking',
+    'notch',
+    'allpass',
+]
 
 
 function setFromProgram(state, prog, gui) {
@@ -216,7 +234,7 @@ function createSignalGUI(gui, num) {
         target: defSig.target,
     }
     f.add(obj, 'enabled').onChange(onChange)
-    f.add(obj, 'type').onChange(onChange)
+    f.add(obj, 'type', sigTypes).onChange(onChange)
     f.add(obj, 'target').name('target (0.freq..)').onChange(onChange)
     return obj
 }
@@ -263,7 +281,7 @@ function addEnvelopeFolder(gui, state, numSignals) {
     }
     var handle = function () { drawMenuTargets(state, gui) }
     f.add(obj, 'forSignal', 0, numSignals - 1).step(1).name('For signal').onChange(handle)
-    f.add(obj, 'forProp', ['freq', 'gain']).name('For prop').onChange(handle)
+    f.add(obj, 'forProp', ['freq', 'gain', 'Q']).name('For prop').onChange(handle)
 
     addProp(obj, f, 'v', defSig.gain, 0, 10, 0.1, 'peak')
     addProp(obj, f, 'a', defSig.gain, 0, 2, 0.001, 'attack time')

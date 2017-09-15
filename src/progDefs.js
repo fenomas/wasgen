@@ -13,7 +13,7 @@ function Signal(type, target, freq, gain, Q) {
     this.target = target || ''
     this.freq = freq || null
     this.gain = gain || null
-    // this.Q = Q || null
+    this.Q = Q || null
 }
 
 function Sweep(t, f, p, q, k, j, jt) {
