@@ -27,7 +27,10 @@ function Sources(ctx) {
 
     this.isSource = function (type) {
         var ty = type.substr(0, 2)
-        return (oscillatorTypes[ty]) ? true : false
+        if (oscillatorTypes[ty]) return true
+        var t = type[0]
+        if (t === 'n' || t === 'w') return true
+        return false
     }
 
     this.usesGain = function (node) { return true }
@@ -38,11 +41,12 @@ function Sources(ctx) {
     // source creation
 
     this.createNode = function (type) {
-        if (type[0] === 'n') return createNoise(type)
-        if (type[0] === 'w') return createWave(type)
+        var t = type[0]
+        if (t === 'n') return createNoise(type)
+        if (t === 'w') return createWave(type)
 
-        var t = oscillatorTypes[type.substr(0, 2)]
-        return createOscillator(t || 'sine')
+        var name = oscillatorTypes[type.substr(0, 2)]
+        return createOscillator(name || 'sine')
     }
 
 

@@ -29,6 +29,7 @@
 		}
 
 		.item {
+			/* display: none; */
 			display: block;
 			margin: 0.8rem;
 		}
@@ -72,6 +73,12 @@
 			white-space: nowrap;
 			overflow: auto;
 		}
+
+		#benchmark {
+			position: relative;
+			left: 250px;
+			padding: 0.7rem;
+		}
 	</style>
 </head>
 
@@ -95,6 +102,7 @@
 			<canvas class="item" id="waveform" width="450" height="120"></canvas>
 			<canvas class="item" id="eq" width="450" height="120"></canvas>
 			<canvas class="item" id="spectrograph" width="450" height="120"></canvas>
+			<button id="benchmark">Benchmark</button>
 		</div>
 	</div>
 

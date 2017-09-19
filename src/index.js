@@ -52,11 +52,17 @@ function SoundGen(audioContext, destination) {
         player.releaseAll(time)
     }
 
+    this.setMaxVoices = function (n) {
+        player.maxVoices = n
+    }
+
+    this.now = function () {
+        return ctx.currentTime
+    }
 
     this.dispose = function () {
         player.releaseAll()
     }
-
 
 
 }

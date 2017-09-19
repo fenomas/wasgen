@@ -144,6 +144,46 @@ presets.onchange = importPreset
 
 
 
+// benchmark - just play a load of sounds overlapped
+
+document.querySelector('#benchmark').onmousedown = function () {
+    var N = 64
+    gen.setMaxVoices(N)
+    var carrier = {
+        type: 'sine',
+        freq: { p: 1, },
+        gain: { a: 0.01 },
+    }
+    var FM = {
+        type: 'sine',
+        target: '0.freq',
+        freq: {},
+        gain: {},
+    }
+    var filter = {
+        type: 'bandpass',
+        target: '',
+        freq: { t: 0, f: 1000, p: 1.1 },
+        gain: { a: 0.2 },
+    }
+    var program = [carrier, filter]
+    for (var i = 0; i < N; i++) {
+        carrier.freq.p = (Math.random() < 0.5) ? 1 : 0.5 + Math.random()
+        carrier.gain.a = Math.random() / 5
+        filter.freq.f = 500 + 1000 * Math.random()
+        var note = 45 + (70 * Math.random()) | 0
+        var freq = 440 * Math.pow(2, (note - 69) / 12)
+        var vol = 0.3
+        var time = gen.now() + i * (1 / N)
+        var releaseTime = time + 0.5 + Math.random()
+        gen.play(program, freq, vol, time, releaseTime)
+    }
+}
+
+
+
+
+
 
 /*
  *      HMR

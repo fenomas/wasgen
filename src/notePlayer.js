@@ -19,7 +19,7 @@ function Player(ctx, dest) {
      * 
     */
 
-    this.maxVoices = 64
+    this.maxVoices = 32
 
 
 
@@ -60,16 +60,15 @@ function Player(ctx, dest) {
 
 
     var currentNotes = []
-    var notesHeld = 0
 
 
     function enforceMaxVoices(limit) {
-        if (notesHeld <= limit) return
-        for (var i = 0; i < currentNotes.length; i++) {
-            if (!currentNotes[i].released) {
-                releaseNote(currentNotes[i], ctx.currentTime)
-                if (notesHeld <= limit) return
-            }
+        if (currentNotes.length <= limit) return
+        // dispose anything disposeable
+        pruneEndedNotes()
+        // if still too many, just dispose stuff, oldest first
+        while (currentNotes.length > limit) {
+            disposeNote(currentNotes.shift())
         }
     }
 
@@ -89,18 +88,21 @@ function Player(ctx, dest) {
     }
 
 
+
+
     // cleanup function
-    setInterval(function () {
+    function pruneEndedNotes() {
         var t = ctx.currentTime
         for (var i = 0; i < currentNotes.length; i++) {
             var note = currentNotes[i]
-            if (note.released && t >= note.endTime) {
+            if (note.endTime > 0 && t >= note.endTime) {
                 disposeNote(note)
                 currentNotes.splice(i, 1)
                 i--
             }
         }
-    }, 100)
+    }
+    setInterval(pruneEndedNotes, 200)
 
 
 
@@ -122,7 +124,6 @@ function Player(ctx, dest) {
         _noteID = (_noteID + 1) & 0xFFFF
         this.id = _noteID
         this.time = +time
-        this.released = false
         this.endTime = +0
         // audio nodes
         this.nodes = []
@@ -278,7 +279,6 @@ function Player(ctx, dest) {
         destChain.length = 0
         lineOuts.length = 0
 
-        notesHeld++
         return note
     }
 
@@ -299,7 +299,8 @@ function Player(ctx, dest) {
     */
 
     function releaseNote(note, time) {
-        if (note.released) return
+        if (note.endTime > 0) return
+        if (time < note.time) time = note.time
 
         var maxRel = 0
         note.envParams.forEach((param, i) => {
@@ -321,9 +322,7 @@ function Player(ctx, dest) {
             if (relTime > maxRel) maxRel = relTime
         })
 
-        note.released = true
         note.endTime = Math.max(time, maxRel)
-        notesHeld--
     }
 
 

@@ -43,8 +43,8 @@ function Params() {
             // equivalent to: base *= Math.pow(2, (midiNote - 60) / 12 * k)
         }
 
-        // apply sweep or envelope - sweep always has one of [t, f, j] nonzero
-        if (program.t || program.f || program.j) {
+        // apply sweep or envelope - sweep always has one of [t, f, p, j] nonzero
+        if (program.t || program.f || program.p || program.j) {
             conformProg(tmpSweep, program, defSweep)
             return applyParamSweep(param, time, baseVal, tmpSweep, PBRmult)
         } else {
