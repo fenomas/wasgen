@@ -43,9 +43,10 @@ function playNote(note) {
     if (currNotes[note]) return
     var program = currentProgram
     var freq = 440 * Math.pow(2, (note - 69) / 12)
-    var vol = 1
+    var vel = gui.getVelocity()
     lastFrequency = freq
-    currNotes[note] = gen.play(program, freq, vol)
+    var time = gen.now() + 0.01 // playing at zero delay usually means clicks
+    currNotes[note] = gen.play(program, freq, vel, time)
 }
 
 function releaseNote(note) {

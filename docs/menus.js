@@ -36,7 +36,8 @@ function Menus() {
         self.onChange(currProg)
     }
 
-    // set by client code
+    // accessed by client code
+    this.getVelocity = function () { return velocity }
     this.onChange = function () { }
 
 
@@ -44,7 +45,7 @@ function Menus() {
 
 var onChange
 var currProg = { freq: {}, gain: {} }
-
+var velocity = 1
 
 
 
@@ -216,6 +217,8 @@ function setProgramFromMenus(currProg, state) {
 */
 
 function buildMenuOptions(gui, state, numSignals) {
+    state.vel = velocity
+    gui.add(state, 'vel', 0, 1).step(0.01).onChange(v => { velocity = v }).name('Velocity')
     state.signals = []
     for (var i = 0; i < numSignals; i++) {
         state.signals[i] = createSignalGUI(gui, i)

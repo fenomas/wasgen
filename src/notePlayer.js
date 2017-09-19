@@ -23,10 +23,10 @@ function Player(ctx, dest) {
 
 
 
-    this.play = function (program, freq, vol, time, releaseTime) {
+    this.play = function (program, freq, vel, time, releaseTime) {
         time = time || ctx.currentTime
         enforceMaxVoices(this.maxVoices - 1)
-        var note = addNote(program, freq, vol, time, dest)
+        var note = addNote(program, freq, vel, time, dest)
         if (releaseTime) releaseNote(note, releaseTime)
         return note.id
     }
@@ -73,8 +73,8 @@ function Player(ctx, dest) {
         }
     }
 
-    function addNote(program, freq, vol, time, dest) {
-        var note = makeNote(program, freq, vol, time, dest)
+    function addNote(program, freq, vel, time, dest) {
+        var note = makeNote(program, freq, vel, time, dest)
         currentNotes.push(note)
         return note
     }
@@ -148,7 +148,7 @@ function Player(ctx, dest) {
 
 
 
-    function makeNote(program, freq, vol, time, dest) {
+    function makeNote(program, freq, vel, time, dest) {
         var note = new Note(time)
 
         var signalFreqs = []
@@ -195,7 +195,7 @@ function Player(ctx, dest) {
 
             // apply gain program unless source node ignores gain
             if (nodeCreator.usesGain(node)) {
-                var gBase = (target < 0) ? vol * vol : 1
+                var gBase = (target < 0) ? vel * vel : 1
                 var targetPBR = false
                 if (target >= 0 && targetProp === 'freq') {
                     gBase = signalFreqs[target]

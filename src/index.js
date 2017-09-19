@@ -7,10 +7,12 @@ module.exports = SoundGen
 
 
 
-/**
- * SoundGen
- * @param {*} audioContext 
- * @param {*} destination 
+/*
+ *
+ *  
+ *                  SoundGen
+ *  
+ * 
 */
 
 function SoundGen(audioContext, destination) {
@@ -37,8 +39,8 @@ function SoundGen(audioContext, destination) {
 
 
 
-    this.play = function (program, freq, vol, time, releaseTime) {
-        return player.play(program, freq, vol, time, releaseTime)
+    this.play = function (program, freq, vel, time, releaseTime) {
+        return player.play(program, freq, vel, time, releaseTime)
     }
 
 

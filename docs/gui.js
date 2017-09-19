@@ -30,6 +30,9 @@ function GUI(state) {
         self.programChanged(prog)
         showProgramText(prog)
     }
+    this.getVelocity = function() {
+        return menus.getVelocity()
+    }
 
     // set events from here elsewards
     onChange = function (prog) {
