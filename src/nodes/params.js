@@ -1,6 +1,6 @@
 'use strict'
 
-var defs = require('./progDefs')
+var defs = require('../progDefs')
 
 module.exports = Params
 

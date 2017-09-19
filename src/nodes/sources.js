@@ -14,47 +14,46 @@ module.exports = Sources
 
 function Sources(ctx) {
 
-
-    this.createSource = function (type) {
-        if (type[0] === 'n') return createNoise(type)
-        if (type[0] === 'w') return createWave(type)
-
-        var t = oscillatorTypes[type.substr(0, 2)]
-        if (t) return createOscillator(t)
-
-        if (filterParams[type]) return createFilter(type)
-
-        return createOscillator('sine')
-    }
-
-    this.usesGain = function (node) {
-        var str = filterParams[node.type]
-        return (!str) || str.includes('g')
-    }
-
-    this.usesQ = function (node) {
-        var str = filterParams[node.type]
-        return str && str.includes('q')
-    }
-
-    this.isEffect = function (node) {
-        return !!node.Q
-    }
-
-
-
-    /*
-     * 
-     *      OSCILLATORS
-     * 
-    */
-
     var oscillatorTypes = {
         si: 'sine',
         sq: 'square',
         sa: 'sawtooth',
         tr: 'triangle',
     }
+
+
+
+    // info accessors
+
+    this.isSource = function (type) {
+        var ty = type.substr(0, 2)
+        return (oscillatorTypes[ty]) ? true : false
+    }
+
+    this.usesGain = function (node) { return true }
+    this.usesQ = function (node) { return false }
+
+
+
+    // source creation
+
+    this.createNode = function (type) {
+        if (type[0] === 'n') return createNoise(type)
+        if (type[0] === 'w') return createWave(type)
+
+        var t = oscillatorTypes[type.substr(0, 2)]
+        return createOscillator(t || 'sine')
+    }
+
+
+
+
+    /*
+     * 
+     *      SOURCES
+     * 
+    */
+
 
     function createOscillator(type) {
         var osc = ctx.createOscillator()
@@ -148,35 +147,6 @@ function Sources(ctx) {
         return np
     })()
 
-
-
-
-
-
-
-
-    /*
-     * 
-     *      EFFECTS
-     * 
-    */
-
-    var filterParams = {
-        lowpass: 'fq',
-        highpass: 'fq',
-        bandpass: 'fq',
-        lowshelf: 'fg',
-        highshelf: 'fg',
-        peaking: 'fqg',
-        notch: 'fq',
-        allpass: 'fq'
-    }
-
-    function createFilter(type) {
-        var filter = ctx.createBiquadFilter()
-        filter.type = type || 'lowpass'
-        return filter
-    }
 
 
 }

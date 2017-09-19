@@ -1,7 +1,8 @@
 'use strict'
 
-var Params = require('./params')
-var Sources = require('./sources')
+var Params = require('./nodes/params')
+var Sources = require('./nodes/sources')
+var Effects = require('./nodes/effects')
 var defs = require('./progDefs')
 
 module.exports = Player
@@ -140,6 +141,7 @@ function Player(ctx, dest) {
 
     var params = new Params()
     var sources = new Sources(ctx)
+    var effects = new Effects(ctx)
 
     var defSweep = new defs.Sweep()
     var defEnv = new defs.Envelope()
@@ -150,7 +152,7 @@ function Player(ctx, dest) {
         var note = new Note(time)
 
         var signalFreqs = []
-        var sourceNodes = []
+        var baseNodes = []
         var gainNodes = []
         var destChain = []
         var lineOuts = []
@@ -161,12 +163,15 @@ function Player(ctx, dest) {
             // this is sugar to make the UI work easier
             if (signal.type === 'none') continue
 
-            // create the initial node (oscillator, buffer, or filter)
-            var src = sources.createSource(signal.type || 'sine')
-            if (src.start) src.start(time)
-            note.nodes.push(src)
-            sourceNodes[i] = src
-            var currOutput = src
+            // create base node - either a source or an effect
+            var type = signal.type || 'sine'
+            var isSource = sources.isSource(type)
+            var nodeCreator = isSource ? sources : effects
+            var node = nodeCreator.createNode(type)
+            if (node.start) node.start(time)
+            note.nodes.push(node)
+            baseNodes[i] = node
+            var currOutput = node
 
             // parse target
             var target = -1
@@ -178,23 +183,23 @@ function Player(ctx, dest) {
             }
 
             // make a gain node if the source needs one, and connect it up
-            var gainParam = src.gain
+            var gainParam = node.gain
             if (!gainParam) {
                 var gainNode = ctx.createGain()
                 note.nodes.push(gainNode)
-                src.connect(gainNode)
+                node.connect(gainNode)
                 currOutput = gainNode
                 gainParam = gainNode.gain
                 gainNodes[i] = gainNode
             }
 
             // apply gain program unless source node ignores gain
-            if (sources.usesGain(src)) {
+            if (nodeCreator.usesGain(node)) {
                 var gBase = (target < 0) ? vol * vol : 1
                 var targetPBR = false
                 if (target >= 0 && targetProp === 'freq') {
                     gBase = signalFreqs[target]
-                    if (sourceNodes[target].playbackRate) targetPBR = true
+                    if (baseNodes[target].playbackRate) targetPBR = true
                 }
                 var gProg = (isSet(signal.gain)) ? signal.gain : defEnv
                 // console.log('setting gain ', i)
@@ -204,27 +209,27 @@ function Player(ctx, dest) {
             // apply frequency program, defaulting to an empty sweep
             var fqBase = (target < 0) ? freq : signalFreqs[target]
             var fqProg = (isSet(signal.freq)) ? signal.freq : defSweep
-            var isPBR = !!src.playbackRate
-            var fqParam = (isPBR) ? src.playbackRate : src.frequency
+            var isPBR = !!node.playbackRate
+            var fqParam = (isPBR) ? node.playbackRate : node.frequency
             // console.log('setting freq ', i)
             signalFreqs[i] = params.apply(note, fqParam, time, fqBase, fqProg, freq, isPBR)
             //   ..and remember base/peak value in signalFreqs
 
             // effects can have a Q value and program
-            if (src.Q && isSet(signal.Q) && sources.usesQ(src)) {
+            if (node.Q && isSet(signal.Q) && nodeCreator.usesQ(node)) {
                 // console.log('setting Q ', i)
-                params.apply(note, src.Q, time, 1, signal.Q, freq)
+                params.apply(note, node.Q, time, 1, signal.Q, freq)
             }
 
             // nodes and params ready, prepare connection chains
 
-            // if src is an effect, put it somewhere in the output chain
-            if (sources.isEffect(src)) {
+            // if node is an effect, put it somewhere in the output chain
+            if (!isSource) {
                 if (target < 0 || !lineOuts[target]) {
-                    destChain.push(src)
+                    destChain.push(node)
                 } else {
-                    lineOuts[target].connect(src)
-                    lineOuts[target] = src
+                    lineOuts[target].connect(node)
+                    lineOuts[target] = node
                 }
             } else {
                 // src is an oscillator/buffer:
@@ -236,10 +241,10 @@ function Player(ctx, dest) {
                     // signal drives a property somewhere
                     var paramTgt
                     if (targetProp === 'freq') {
-                        var nodeTgt = sourceNodes[target]
+                        var nodeTgt = baseNodes[target]
                         paramTgt = nodeTgt.frequency || nodeTgt.playbackRate
                     } else if (targetProp === 'Q') {
-                        paramTgt = sourceNodes[target].Q
+                        paramTgt = baseNodes[target].Q
                     } else if (targetProp === 'gain') {
                         paramTgt = gainNodes[target].gain
                     } else {
@@ -268,7 +273,7 @@ function Player(ctx, dest) {
 
         // sanity
         signalFreqs.length = 0
-        sourceNodes.length = 0
+        baseNodes.length = 0
         gainNodes.length = 0
         destChain.length = 0
         lineOuts.length = 0
