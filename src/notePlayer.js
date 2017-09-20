@@ -147,6 +147,8 @@ function Player(ctx, dest) {
     var defSweep = new defs.Sweep()
     var defEnv = new defs.Envelope()
 
+    var fakeSweep = { t: 0, f: 0 }
+    var fakeEnv = { v: 1 }
 
 
     function makeNote(program, freq, vel, time, dest) {
@@ -203,7 +205,10 @@ function Player(ctx, dest) {
                     if (baseNodes[target].playbackRate) targetPBR = true
                 }
                 var gProg = (isSet(signal.gain)) ? signal.gain : defEnv
-                // console.log('setting gain ', i)
+                if (typeof gProg === 'number') {
+                    fakeEnv.v = gProg
+                    gProg = fakeEnv
+                }
                 var res = params.apply(note, gainParam, time, gBase, gProg, freq, targetPBR)
             }
 
@@ -212,7 +217,10 @@ function Player(ctx, dest) {
             var fqProg = (isSet(signal.freq)) ? signal.freq : defSweep
             var isPBR = !!node.playbackRate
             var fqParam = (isPBR) ? node.playbackRate : node.frequency
-            // console.log('setting freq ', i)
+            if (typeof fqProg === 'number') {
+                fakeSweep.f = fqProg
+                fqProg = fakeSweep
+            }
             signalFreqs[i] = params.apply(note, fqParam, time, fqBase, fqProg, freq, isPBR)
             //   ..and remember base/peak value in signalFreqs
 

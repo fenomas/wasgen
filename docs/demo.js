@@ -4,6 +4,7 @@ var Viz = require('./viz')
 var Gui = require('./gui')
 var Instruments = require('./tinySynthInstruments')
 var converter = require('./programConverter')
+var Presets = require('./presets')
 
 
 
@@ -36,7 +37,7 @@ var currentProgram
 */
 
 var currNotes = {}
-var lowestNote = 58 // 30
+var lowestNote = 40
 var lastFrequency = 440
 
 function playNote(note) {
@@ -49,8 +50,8 @@ function playNote(note) {
     currNotes[note] = gen.play(program, freq, vel, time)
 }
 
-function releaseNote(note) {
-    gen.release(currNotes[note])
+function releaseNote(note, time) {
+    gen.release(currNotes[note], time)
     currNotes[note] = null
 }
 
@@ -60,13 +61,17 @@ function releaseNote(note) {
 // programs - importing presets and handling GUI
 
 var inst = new Instruments()
+var presets = new Presets()
 
 // preset pulldown change -> update program, inform UI
 function importPreset() {
-    var name = inst.names[presets.selectedIndex]
+    var name = inst.names[presetPD.selectedIndex]
     var qual = !!document.getElementById('quality').checked
     var tsprog = inst.getProg(name, qual)
     var prog = converter(gen, tsprog)
+    applyPreset(prog)
+}
+function applyPreset(prog) {
     gui.setProgram(prog)
     currentProgram = prog
 }
@@ -134,14 +139,36 @@ window.addEventListener('keydown', down)
 window.addEventListener('keyup', up)
 
 
-var presets = document.querySelector('#presets')
+var presetPD = document.querySelector('#presets')
 inst.names.forEach((name, i) => {
     var opt = document.createElement('option')
     opt.text = name
-    presets.options[i] = opt
+    presetPD.options[i] = opt
 })
-presets.onchange = importPreset
+presetPD.onchange = importPreset
 
+
+var presetPD2 = document.querySelector('#presets2')
+for (var s in presets) {
+    var opt = document.createElement('option')
+    opt.text = s
+    presetPD2.options[presetPD2.options.length] = opt
+}
+presetPD2.onchange = function () {
+    var i = presetPD2.selectedIndex
+    var text = presetPD2.options[i].text
+    if (!text) return
+    var prog = presets[text]()
+    applyPreset(prog)
+    playNote(69)
+    releaseNote(69, gen.now() + 0.5)
+}
+
+var redoBut = document.querySelector('#redo')
+redoBut.onmousedown = function () {
+    if (presetPD2.selectedIndex < 1) presetPD2.selectedIndex = 1
+    presetPD2.onchange()
+}
 
 
 // benchmark - just play a load of sounds overlapped

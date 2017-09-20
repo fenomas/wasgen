@@ -30,7 +30,7 @@ function GUI(state) {
         self.programChanged(prog)
         showProgramText(prog)
     }
-    this.getVelocity = function() {
+    this.getVelocity = function () {
         return menus.getVelocity()
     }
 
@@ -83,12 +83,18 @@ function removeDefaults(prog) {
         if (src[prop] !== def[prop]) tgt[prop] = src[prop]
     }
     return prog.map(obj => {
-        var ret = { type: 'sine', freq: {}, gain: {} }
+        var ret = { type: 'sine' }
         sigProps.forEach(p => fill(p, obj, ret, defSig))
-        sweepProps.forEach(p => fill(p, obj.freq, ret.freq, defSig.freq))
-        envProps.forEach(p => fill(p, obj.freq, ret.freq, defSig.freq))
-        sweepProps.forEach(p => fill(p, obj.gain, ret.gain, defSig.gain))
-        envProps.forEach(p => fill(p, obj.gain, ret.gain, defSig.gain))
+        if (typeof obj.freq !== 'number') {
+            ret.freq = {}
+            sweepProps.forEach(p => fill(p, obj.freq, ret.freq, defSig.freq))
+            envProps.forEach(p => fill(p, obj.freq, ret.freq, defSig.freq))
+        } else ret.freq = obj.freq
+        if (typeof obj.gain !== 'number') {
+            ret.gain = {}
+            sweepProps.forEach(p => fill(p, obj.gain, ret.gain, defSig.gain))
+            envProps.forEach(p => fill(p, obj.gain, ret.gain, defSig.gain))
+        } else ret.gain = obj.gain
         return ret
     })
 }
@@ -108,12 +114,8 @@ function formatProgram(prog) {
             return sig[p] ? formatProp(sig, p) : ''
         }).filter(p => p).join(', ')
         if (line1.length > 5) line1 += ', '
-        var line2 = '    freq: { ' + sweepProps.map(p => {
-            return formatProp(sig.freq, p)
-        }).filter(p => p).join(', ') + ' }, '
-        var line3 = '    gain: { ' + envProps.map(p => {
-            return formatProp(sig.gain, p)
-        }).filter(p => p).join(', ') + ' }  },'
+        var line2 = formatLine('freq', sig, sweepProps) + ', '
+        var line3 = formatLine('gain', sig, envProps) + ' }, '
         lines.push(line1, line2, line3)
     })
     lines.push(']')
@@ -121,13 +123,25 @@ function formatProgram(prog) {
     return lines.join('\n')
 }
 
+function formatLine(name, signal, propList) {
+    if (typeof signal[name] === 'number') return `    ${name}: ${signal[name]},`
+    return `    ${name}: { ` + propList.map(p => {
+        return formatProp(signal[name], p)
+    }).filter(p => p).join(', ') + ' }'
+}
+
 function formatProp(obj, p) {
-    if (isNaN(obj[p]) && !obj[p]) return ''
-    if (typeof obj[p] === 'number') return `${p}: ${Math.round(1000 * obj[p]) / 1000}`
+    if (!obj) return ''
+    var prop = obj[p]
+    if (isNaN(prop) && !prop) return ''
+    if (typeof prop === 'string') return `${p}: '${prop}'`
+    if (typeof prop === 'number') return `${p}: ${round(prop)}`
+    if (prop.length) return `${p}: [ ${prop.map(round).join(', ')} ]`
     return `${p}: '${obj[p]}'`
 }
 
 
+var round = (n) => Math.round(n * 100) / 100
 
 
 

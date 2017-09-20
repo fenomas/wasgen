@@ -20,22 +20,12 @@ function Params() {
     var tmpSweep = new defs.Sweep()
     var tmpEnvelope = new defs.Envelope()
 
-    var tempProg = {
-        t: +0,
-        f: +0,
-    }
 
 
     this.apply = function (note, param, time, baseVal, program, inputFreq, isPBR) {
 
         // playbackRate params need a baked-in multiplier of 1/440
         var PBRmult = (isPBR) ? 1 / 440 : 1
-
-        // null case of number being passed in
-        if (typeof program === 'number') {
-            tempProg.f = +program
-            program = tempProg
-        }
 
         // apply input key tracking before subsequent param programs
         if (program.k) {
@@ -74,24 +64,30 @@ function Params() {
         // console.log('   param sweep:', value, bend ? ' --> ' + target : '')
 
         if (prog.j && prog.jt) {
-            var js = prog.j.split(',').map(s => parseFloat(s))
-            var jts = prog.jt.split(',').map(s => parseFloat(s))
+            var jarr = prog.j
+            var jtarr = prog.jt
+            if (typeof jarr === 'string') jarr = jarr.split(',').map(s => parseFloat(s))
+            if (typeof jtarr === 'string') jtarr = jtarr.split(',').map(s => parseFloat(s))
             var v = value
             var t = 0
-            for (var i = 0; i < js.length; i++) {
-                var j = js[i]
-                var jt = jts[i]
+            for (var i = 0; i < jarr.length; i++) {
+                var j = jarr[i]
+                var jt = jtarr[i]
+                var old = v
                 if (j && jt) {
                     if (bend) {
-                        v = j * evalTargetCurve(v, target, jt)
+                        v = evalTargetCurve(v, target, jt, prog.q)
+                        old = v
+                        v += j * (target - v)
                         t += jt
                         param.setValueAtTime(v, time + t)
                         param.setTargetAtTime(target, time + t, prog.q)
                     } else {
-                        v *= j
+                        v += v * j
                         t += jt
                         param.setValueAtTime(v, time + t)
                     }
+                    // console.log('   param jump:', old, 'to', v, bend ? ' --> ' + target : '')
                 }
             }
         }
@@ -99,8 +95,9 @@ function Params() {
     }
 
     // evaluate value of param during a setTarget curve
-    function evalTargetCurve(v0, vTarget, dt) {
-        return vTarget + (v0 - vTarget) * Math.exp(-dt)
+    // https://webaudio.github.io/web-audio-api/#widl-AudioParam-setTargetAtTime-AudioParam-float-target-double-startTime-float-timeConstant
+    function evalTargetCurve(v0, vTarget, dt, timeConst) {
+        return vTarget + (v0 - vTarget) * Math.exp(-dt / timeConst)
     }
 
 
@@ -125,10 +122,9 @@ function Params() {
         note.envReleases.push(prog.r || 0)
 
         // console.log('   param env:  0 -> ', peak, ' -> ' , peak * prog.s, ' -> 0')
-        
+
         return peak / valueMult
     }
-
 
 
 

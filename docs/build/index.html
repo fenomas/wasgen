@@ -43,9 +43,15 @@
 			cursor: pointer;
 		}
 
-		select#presets {
+		#presets, #presets2 {
 			font: 300 15px "Helvetica Neue", Meiryo, Helvetica, sans-serif;
 			margin: 0.5rem;
+		}
+
+		#redo {
+			font-size: 18px;
+			margin: 0.5rem;
+	
 		}
 
 		#play {
@@ -88,6 +94,8 @@
 			<button class="item" id="play">Play</button>
 			<label class="item" id="presetLabel">
 				Presets: <select id="presets"></select>
+				<select id="presets2"><option></option></select>
+				<button id="redo">←</button>
 			</label>
 			<textarea id="progText" class="item"></textarea>
 			<div class="item" id="menus"></div>
