@@ -159,6 +159,7 @@ function Player(ctx, dest) {
         var gainNodes = []
         var destChain = []
         var lineOuts = []
+        var fqParams = []
 
         for (var i = 0; i < program.length; i++) {
             var signal = defs.conformSignal(program[i])
@@ -200,21 +201,24 @@ function Player(ctx, dest) {
             // apply gain program unless source node ignores gain
             if (nodeCreator.usesGain(node)) {
                 var gBase = (target < 0) ? vel * vel : 1
-                var targetPBR = false
                 if (target >= 0 && targetProp === 'freq') {
                     gBase = signalFreqs[target]
-                    if (baseNodes[target].playbackRate) targetPBR = true
+                    if (baseNodes[target].playbackRate) {
+                        gainParam = new ParamWrapper(gainParam, 1 / 440)
+                    }
                 }
-                var res = params.apply(note, gainParam, time, gBase, signal.gain, freq, targetPBR)
+                var res = params.apply(note, gainParam, time, gBase, signal.gain, freq)
             }
 
             // apply frequency program, defaulting to an empty sweep
             var fqBase = (target < 0) ? freq : signalFreqs[target]
-            // var fqProg = (isSet(signal.freq)) ? signal.freq : defSweep
-            var isPBR = !!node.playbackRate
-            var fqParam = (isPBR) ? node.playbackRate : node.frequency
-            signalFreqs[i] = params.apply(note, fqParam, time, fqBase, signal.freq, freq, isPBR)
+            var fqParam = (node.playbackRate) ?
+                new ParamWrapper(node.playbackRate, 1 / 440) :
+                node.frequency
+            var fqResult = params.apply(note, fqParam, time, fqBase, signal.freq, freq)
             //   ..and remember base/peak value in signalFreqs
+            signalFreqs[i] = fqResult
+            fqParams[i] = fqParam
 
             // effects can have a Q value and program
             if (node.Q && signal.Q && nodeCreator.usesQ(node)) {
@@ -241,8 +245,7 @@ function Player(ctx, dest) {
                     // signal drives a property somewhere
                     var paramTgt
                     if (targetProp === 'freq') {
-                        var nodeTgt = baseNodes[target]
-                        paramTgt = nodeTgt.frequency || nodeTgt.playbackRate
+                        paramTgt = fqParams[target]
                     } else if (targetProp === 'Q') {
                         paramTgt = baseNodes[target].Q
                     } else if (targetProp === 'gain') {
@@ -251,7 +254,8 @@ function Player(ctx, dest) {
                         console.warn('NYI -- unknown target prop', targetProp)
                     }
                     if (paramTgt) {
-                        currOutput.connect(paramTgt)
+                        var pout = paramTgt.wrappedParam || paramTgt
+                        currOutput.connect(pout)
                     }
                 }
             }
@@ -277,6 +281,7 @@ function Player(ctx, dest) {
         gainNodes.length = 0
         destChain.length = 0
         lineOuts.length = 0
+        fqParams.length = 0
 
         return note
     }
@@ -347,6 +352,19 @@ function Player(ctx, dest) {
 
 
 }
+
+
+
+// Wrapper to bake a multiplier value into an AudioParam
+function ParamWrapper(param, mult) {
+    this.wrappedParam = param
+    // this.setValue = (v) => param.value = v * mult
+    this.setValueAtTime = (v, t) => param.setValueAtTime(v * mult, t)
+    this.setTargetAtTime = (v, t, c) => param.setTargetAtTime(v * mult, t, c)
+    this.cancelScheduledValues = (t) => param.cancelScheduledValues(t)
+    this.linearRampToValueAtTime = (v, t) => param.linearRampToValueAtTime(v * mult, t)
+}
+
 
 
 

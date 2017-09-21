@@ -16,10 +16,7 @@ function Params() {
 
 
 
-    this.apply = function (note, param, time, baseVal, program, inputFreq, isPBR) {
-
-        // playbackRate params need a baked-in multiplier of 1/440
-        var PBRmult = (isPBR) ? 1 / 440 : 1
+    this.apply = function (note, param, time, baseVal, program, inputFreq) {
 
         // apply input key tracking before subsequent param programs
         if (program.k) {
@@ -29,19 +26,20 @@ function Params() {
 
         // apply sweep or envelope - sweep always has one of [t, f, p, j] nonzero
         if (program.t || program.f || program.p || program.j) {
-            return applyParamSweep(param, time, baseVal, program, PBRmult)
+            return applyParamSweep(param, time, baseVal, program)
         } else {
-            return applyParamEnvelope(note, param, time, baseVal, program, PBRmult)
+            return applyParamEnvelope(note, param, time, baseVal, program)
         }
+
     }
 
 
 
 
     // apply a sweep program
-    function applyParamSweep(param, time, value, prog, valueMult) {
-        value = (value * prog.t + prog.f) * valueMult
-        param.value = value
+    function applyParamSweep(param, time, value, prog) {
+        value = (value * prog.t + prog.f)
+        param.setValueAtTime(value, time)
 
         var bend = (prog.p !== 1)
         var target = value * prog.p
@@ -77,7 +75,7 @@ function Params() {
                 }
             }
         }
-        return value / valueMult
+        return value
     }
 
     // evaluate value of param during a setTarget curve
@@ -88,11 +86,11 @@ function Params() {
 
 
 
-    
+
     // apply an envelope program
-    function applyParamEnvelope(note, param, time, peak, prog, valueMult) {
-        param.value = 0
-        peak = peak * prog.v * valueMult
+    function applyParamEnvelope(note, param, time, peak, prog) {
+
+        peak = peak * prog.v
         if (prog.a > 0) {
             param.setValueAtTime(0, time)
             param.linearRampToValueAtTime(peak, time + prog.a)
@@ -111,7 +109,7 @@ function Params() {
 
         // console.log('   param env:  0 -> ', peak, ' -> ' , peak * prog.s, ' -> 0')
 
-        return peak / valueMult
+        return peak
     }
 
 
