@@ -18,7 +18,7 @@ module.exports = function Presets() {
                 t: 0.5,
                 p: 2,
                 q: rand(0.25, 0.5),
-                j: [rand(0.1, 0.5)],
+                j: [select(0.2, 0.25, 0.3333)],
                 jt: [rand(0.05, 0.15)],
             },
             gain: { v: 0.5, a: 0.01, d: 0.7, s: 0, r: 0.2 }
@@ -27,10 +27,10 @@ module.exports = function Presets() {
 
 
     this.coin = function () {
-        var j = [rand(0.2, 0.4)]
+        var j = [select(0.2, 0.25, 0.3333)]
         var jt = [rand(0.05, 0.1)]
         if (!rand(0, 3)) {
-            j.push(rand(0.2, 0.4))
+            j.push(select(0.2, 0.25, 0.3333))
             jt.push(rand(0.15, 0.2))
         }
         return [{
@@ -46,11 +46,11 @@ module.exports = function Presets() {
 
 
     this.laser = function () {
-        var bend = !rand(0, 2)
+        var bend = select(0, 1)
         return [{
             type: select('triangle'),
             freq: {
-                p: bend ? rand(0.5, 0.9) : 1,
+                p: bend ? select(0.5, 0.75, 0.8) : 1,
                 q: bend ? rand(0.25, 0.5) : 1,
             },
             gain: { v: 0.5, a: 0.01, d: 0.7, s: 0, r: 0.2 }

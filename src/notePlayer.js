@@ -144,11 +144,7 @@ function Player(ctx, dest) {
     var sources = new Sources(ctx)
     var effects = new Effects(ctx)
 
-    var defSweep = new defs.Sweep()
-    var defEnv = new defs.Envelope()
 
-    var fakeSweep = { t: 0, f: 0 }
-    var fakeEnv = { v: 1 }
 
 
     function makeNote(program, freq, vel, baseTime, dest) {
