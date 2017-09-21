@@ -59,7 +59,10 @@ var velocity = 1
 */
 
 
-var defSig = new defs.Signal('', '', new defs.Sweep(), new defs.Envelope(), {})
+var defSig = new defs.Signal('', '', 0, new defs.Sweep(), new defs.Envelope(), {})
+defSig.freq.j = ''
+defSig.freq.jt = ''
+
 
 var sweepProps = ['t', 'f', 'p', 'q', 'k', 'j', 'jt']
 var envProps = ['v', 'a', 'h', 'd', 's', 'r', 'k']
@@ -158,6 +161,7 @@ function setProgramFromMenus(currProg, state) {
         if (obj.enabled) {
             signal.type = obj.type || ''
             signal.target = obj.target || ''
+            signal.delay = obj.delay || 0
         }
     })
     var sweepObj = currProg[state.sweep.forSignal][state.sweep.forProp]
@@ -169,40 +173,6 @@ function setProgramFromMenus(currProg, state) {
         envProps.forEach(p => envObj[p] = state.envelope[p])
     }
 }
-
-
-// function uiStateToProgram(state) {
-//     var prog = []
-//     return prog
-// }
-
-
-// function formatProgram(prog) {
-//     var lines = []
-//     prog.forEach(sig => {
-//         var line1 = '  { ' + sigProps.map(p => {
-//             return sig[p] ? formatProp(sig, p) : ''
-//         }).filter(p => p).join(', ')
-//         if (line1.length > 5) line1 += ', '
-//         var line2 = '    freq: { ' + sweepProps.map(p => {
-//             return formatProp(sig.freq, p)
-//         }).filter(p => p).join(', ') + ' }, '
-//         var line3 = '    gain: { ' + envProps.map(p => {
-//             return formatProp(sig.gain, p)
-//         }).filter(p => p).join(', ') + ' }  },'
-//         lines.push(line1, line2, line3)
-//     })
-//     lines.push(']')
-//     lines[0] = '[' + lines[0].substr(1)
-//     return lines.join('\n')
-// }
-
-// function formatProp(obj, p) {
-//     if (isNaN(obj[p]) && !obj[p]) return ''
-//     if (typeof obj[p] === 'number') return `${p}: ${Math.round(1000 * obj[p]) / 1000}`
-//     return `${p}: '${obj[p]}'`
-// }
-
 
 
 
@@ -235,17 +205,21 @@ function createSignalGUI(gui, num) {
         enabled: (num === 0),
         type: defSig.type,
         target: defSig.target,
+        delay: 0,
     }
     f.add(obj, 'enabled').onChange(onChange)
     f.add(obj, 'type', sigTypes).onChange(onChange)
     f.add(obj, 'target').name('target (0.freq..)').onChange(onChange)
+    f.add(obj, 'delay', 0, 1).step(0.01).name('delay').onChange(onChange)
     return obj
 }
 
 
 function addProp(obj, f, prop, defObj, lo, hi, step, disp) {
     obj[prop] = defObj[prop]
-    var res = f.add(obj, prop, lo, hi)
+    var res = (lo || hi) ?
+        f.add(obj, prop, lo, hi) :
+        f.add(obj, prop)
     if (step) res = res.step(step)
     res.name(prop + ' - ' + disp)
     res.onChange(onChange)

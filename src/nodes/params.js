@@ -14,12 +14,6 @@ module.exports = Params
 
 function Params() {
 
-    var defSweep = new defs.Sweep()
-    var defEnvelope = new defs.Envelope()
-
-    var tmpSweep = new defs.Sweep()
-    var tmpEnvelope = new defs.Envelope()
-
 
 
     this.apply = function (note, param, time, baseVal, program, inputFreq, isPBR) {
@@ -35,20 +29,12 @@ function Params() {
 
         // apply sweep or envelope - sweep always has one of [t, f, p, j] nonzero
         if (program.t || program.f || program.p || program.j) {
-            conformProg(tmpSweep, program, defSweep)
-            return applyParamSweep(param, time, baseVal, tmpSweep, PBRmult)
+            return applyParamSweep(param, time, baseVal, program, PBRmult)
         } else {
-            conformProg(tmpEnvelope, program, defEnvelope)
-            return applyParamEnvelope(note, param, time, baseVal, tmpEnvelope, PBRmult)
+            return applyParamEnvelope(note, param, time, baseVal, program, PBRmult)
         }
     }
 
-
-    // applies default values and then overwrites with inputs
-    function conformProg(prog, src, defs) {
-        for (var s in defs) prog[s] = defs[s]
-        for (var s2 in src) prog[s2] = src[s2]
-    }
 
 
 
@@ -101,6 +87,8 @@ function Params() {
     }
 
 
+
+    
     // apply an envelope program
     function applyParamEnvelope(note, param, time, peak, prog, valueMult) {
         param.value = 0

@@ -62,7 +62,7 @@ module.exports = function Presets() {
                 p: rand(1, 2),
                 q: 0.5,
             },
-            gain: 0.2,
+            gain: { t: 0.2 },
         }]
     }
 

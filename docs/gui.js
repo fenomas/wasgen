@@ -55,7 +55,7 @@ var onChange
 */
 
 var progText = document.getElementById('progText')
-var defSig = new defs.Signal('', '', new defs.Sweep(), new defs.Envelope())
+var defSig = new defs.Signal('', '', 0, new defs.Sweep(), new defs.Envelope())
 
 
 // when program text is edited
@@ -80,6 +80,7 @@ function showProgramText(prog) {
 function removeDefaults(prog) {
     var fill = function (prop, src, tgt, def) {
         if (!src || src[prop] === undefined) return
+        if (src[prop] === '') return
         if (src[prop] !== def[prop]) tgt[prop] = src[prop]
     }
     return prog.map(obj => {
@@ -101,7 +102,7 @@ function removeDefaults(prog) {
 
 
 
-var sigProps = ['type', 'target']
+var sigProps = ['type', 'target', 'delay']
 var sweepProps = ['t', 'f', 'p', 'q', 'k', 'j', 'jt']
 var envProps = ['v', 'a', 'h', 'd', 's', 'r', 'k']
 

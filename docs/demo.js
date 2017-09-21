@@ -37,13 +37,14 @@ var currentProgram
 */
 
 var currNotes = {}
-var lowestNote = 40
+var lowestNote = 45
 var lastFrequency = 440
 
 function playNote(note) {
     if (currNotes[note]) return
     var program = currentProgram
-    var freq = 440 * Math.pow(2, (note - 69) / 12)
+    var n2 = 69 + Math.round((note - 69) * 1.6)
+    var freq = 440 * Math.pow(2, (n2 - 69) / 12)
     var vel = gui.getVelocity()
     lastFrequency = freq
     var time = gen.now() + 0.01 // playing at zero delay usually means clicks
@@ -68,7 +69,7 @@ function importPreset() {
     var name = inst.names[presetPD.selectedIndex]
     var qual = !!document.getElementById('quality').checked
     var tsprog = inst.getProg(name, qual)
-    var prog = converter(gen, tsprog)
+    var prog = converter(tsprog)
     applyPreset(prog)
 }
 function applyPreset(prog) {

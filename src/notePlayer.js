@@ -151,8 +151,8 @@ function Player(ctx, dest) {
     var fakeEnv = { v: 1 }
 
 
-    function makeNote(program, freq, vel, time, dest) {
-        var note = new Note(time)
+    function makeNote(program, freq, vel, baseTime, dest) {
+        var note = new Note(baseTime)
 
         var signalFreqs = []
         var baseNodes = []
@@ -161,13 +161,14 @@ function Player(ctx, dest) {
         var lineOuts = []
 
         for (var i = 0; i < program.length; i++) {
-            var signal = program[i]
+            var signal = defs.conformSignal(program[i])
+            var time = baseTime + signal.delay
 
             // this is sugar to make the UI work easier
             if (signal.type === 'none') continue
 
             // create base node - either a source or an effect
-            var type = signal.type || 'sine'
+            var type = signal.type
             var isSource = sources.isSource(type)
             var nodeCreator = isSource ? sources : effects
             var node = nodeCreator.createNode(type)
@@ -204,29 +205,19 @@ function Player(ctx, dest) {
                     gBase = signalFreqs[target]
                     if (baseNodes[target].playbackRate) targetPBR = true
                 }
-                var gProg = (isSet(signal.gain)) ? signal.gain : defEnv
-                if (typeof gProg === 'number') {
-                    fakeEnv.v = gProg
-                    gProg = fakeEnv
-                }
-                var res = params.apply(note, gainParam, time, gBase, gProg, freq, targetPBR)
+                var res = params.apply(note, gainParam, time, gBase, signal.gain, freq, targetPBR)
             }
 
             // apply frequency program, defaulting to an empty sweep
             var fqBase = (target < 0) ? freq : signalFreqs[target]
-            var fqProg = (isSet(signal.freq)) ? signal.freq : defSweep
+            // var fqProg = (isSet(signal.freq)) ? signal.freq : defSweep
             var isPBR = !!node.playbackRate
             var fqParam = (isPBR) ? node.playbackRate : node.frequency
-            if (typeof fqProg === 'number') {
-                fakeSweep.f = fqProg
-                fqProg = fakeSweep
-            }
-            signalFreqs[i] = params.apply(note, fqParam, time, fqBase, fqProg, freq, isPBR)
+            signalFreqs[i] = params.apply(note, fqParam, time, fqBase, signal.freq, freq, isPBR)
             //   ..and remember base/peak value in signalFreqs
 
             // effects can have a Q value and program
-            if (node.Q && isSet(signal.Q) && nodeCreator.usesQ(node)) {
-                // console.log('setting Q ', i)
+            if (node.Q && signal.Q && nodeCreator.usesQ(node)) {
                 params.apply(note, node.Q, time, 1, signal.Q, freq)
             }
 
