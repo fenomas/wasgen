@@ -43,6 +43,9 @@ function SoundGen(audioContext, destination) {
         return player.play(program, freq, vel, time, releaseTime)
     }
 
+    this.bend = function (noteID, freq, timeConst, time) {
+        return player.bend(noteID, freq, timeConst, time)
+    }
 
     this.release = function (noteID, time) {
         player.release(noteID, time)

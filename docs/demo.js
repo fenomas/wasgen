@@ -40,15 +40,23 @@ var currNotes = {}
 var lowestNote = 45
 var lastFrequency = 440
 
+function noteToFreq(note) {
+    note = 69 + Math.round((note - 69) * 1.6)
+    return 440 * Math.pow(2, (note - 69) / 12)
+}
+
 function playNote(note) {
     if (currNotes[note]) return
     var program = currentProgram
-    var n2 = 69 + Math.round((note - 69) * 1.6)
-    var freq = 440 * Math.pow(2, (n2 - 69) / 12)
     var vel = gui.getVelocity()
+    var freq = noteToFreq(note)
     lastFrequency = freq
     var time = gen.now() + 0.01 // playing at zero delay usually means clicks
     currNotes[note] = gen.play(program, freq, vel, time)
+}
+
+function bendNote(target, note) {
+    gen.bend(currNotes[target], noteToFreq(note), 0.2)
 }
 
 function releaseNote(note, time) {
@@ -113,31 +121,53 @@ function init() {
 */
 
 var keys = 'zxcvbnm,./ asdfghjkl;\'qwertyuiop[1234567890-='
+var shiftNote = 0
+var shifting = false
+
 function keyToNote(k) {
     var i = keys.indexOf(k)
     return (i < 0) ? 0 : lowestNote + i
 }
 
-function down(ev) {
+function playEvent(ev, down) {
     var focused = document.activeElement
     if (focused.type === 'text' || focused.type === 'textarea') return
-    var key = (ev.key) || 'a'
-    var note = keyToNote(key)
-    if (note) playNote(note)
-    if (key === ' ') ev.preventDefault()
-    if (note && focused.tagName === 'SELECT' && !ev.metaKey) ev.preventDefault()
-}
-function up(ev) {
-    var key = (ev.key) || 'a'
-    var note = keyToNote(key)
-    if (note) releaseNote(note)
+    
+    if (ev.key === 'Shift') {
+        if (down) {
+            shifting = true
+        } else {
+            shifting = false
+            if (shiftNote) releaseNote(shiftNote)
+            shiftNote = 0
+        }
+    } else {
+        var key = (ev.key && ev.key.toLowerCase()) || 'a'
+        var note = keyToNote(key)
+
+        if (down) {
+            if (shifting && shiftNote) {
+                bendNote(shiftNote, note)
+            } else {
+                if (note) playNote(note)
+                if (shifting) shiftNote = note
+            }
+            if (key === ' ') ev.preventDefault()
+            if (note && focused.tagName === 'SELECT' && !ev.metaKey) ev.preventDefault()
+        } else {
+            if (note && !shifting || note !== shiftNote) releaseNote(note)
+            if (!shifting) shiftNote = 0
+        }
+    }
 }
 
 
-document.querySelector('#play').onmousedown = down
-document.querySelector('#play').onmouseup = up
-window.addEventListener('keydown', down)
-window.addEventListener('keyup', up)
+
+document.querySelector('#play').onmousedown = ev => playEvent(ev, true)
+document.querySelector('#play').onmouseup = ev => playEvent(ev, false)
+window.onkeydown = ev => playEvent(ev, true)
+window.onkeyup = ev => playEvent(ev, false)
+
 
 
 var presetPD = document.querySelector('#presets')

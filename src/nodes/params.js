@@ -38,11 +38,11 @@ function Params() {
 
     // apply a sweep program
     function applyParamSweep(param, time, value, prog) {
-        value = (value * prog.t + prog.f)
+        value = clamp(value * prog.t + prog.f)
         param.setValueAtTime(value, time)
 
         var bend = (prog.p !== 1)
-        var target = value * prog.p
+        var target = clamp(value * prog.p)
         if (bend) param.setTargetAtTime(target, time, prog.q)
 
         // console.log('   param sweep:', value, bend ? ' --> ' + target : '')
@@ -62,12 +62,12 @@ function Params() {
                     if (bend) {
                         v = evalTargetCurve(v, target, jt, prog.q)
                         old = v
-                        v += j * (target - v)
+                        v += clamp(j * (target - v))
                         t += jt
                         param.setValueAtTime(v, time + t)
                         param.setTargetAtTime(target, time + t, prog.q)
                     } else {
-                        v += v * j
+                        v += clamp(v * j)
                         t += jt
                         param.setValueAtTime(v, time + t)
                     }
@@ -89,8 +89,8 @@ function Params() {
 
     // apply an envelope program
     function applyParamEnvelope(note, param, time, peak, prog) {
+        peak = clamp(peak * prog.v)
 
-        peak = peak * prog.v
         if (prog.a > 0) {
             param.setValueAtTime(0, time)
             param.linearRampToValueAtTime(peak, time + prog.a)
@@ -99,7 +99,8 @@ function Params() {
         }
         if (prog.s !== 1) {
             var decayTime = time + prog.a + prog.h
-            param.setTargetAtTime(peak * prog.s, decayTime, prog.d)
+            var sustain = clamp(peak * prog.s)
+            param.setTargetAtTime(sustain, decayTime, prog.d)
         }
         // store values in the note object so that stuff can be done at release time
         note.envParams.push(param)
@@ -114,6 +115,10 @@ function Params() {
 
 
 
+
+    function clamp(val) {
+        return (val > 22050) ? 22050 : val
+    }
 
 }
 

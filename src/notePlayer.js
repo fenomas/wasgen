@@ -32,17 +32,24 @@ function Player(ctx, dest) {
     }
 
 
+    this.bend = function (noteID, freq, timeConst, time) {
+        time = time || ctx.currentTime
+        var note = getNoteByID(noteID)
+        if (note) bend(note, freq, timeConst, time)
+    }
+
+
     this.release = function (noteID, time) {
         time = time || ctx.currentTime
-        releaseNoteByID(noteID, time)
+        var note = getNoteByID(noteID)
+        if (note) releaseNote(note, time)
     }
 
 
     this.releaseAll = function (time) {
         time = time || ctx.currentTime
         for (var i = 0; i < currentNotes; i++) {
-            var id = currentNotes[i].id
-            releaseNoteByID(id, time)
+            releaseNote(currentNotes[i])
         }
     }
 
@@ -78,13 +85,12 @@ function Player(ctx, dest) {
         return note
     }
 
-    function releaseNoteByID(id, time) {
+
+    function getNoteByID(id) {
         for (var i = 0; i < currentNotes.length; i++) {
-            if (currentNotes[i].id === id) {
-                releaseNote(currentNotes[i], time)
-                return
-            }
+            if (currentNotes[i].id === id) return currentNotes[i]
         }
+        return null
     }
 
 
@@ -127,6 +133,8 @@ function Player(ctx, dest) {
         this.endTime = +0
         // audio nodes
         this.nodes = []
+        // base frequency params (for bending)
+        this.fqParams = []
         // envelope nodes and values
         this.envParams = []
         this.envAttacks = []
@@ -200,7 +208,7 @@ function Player(ctx, dest) {
                 if (target >= 0 && targetProp === 'freq') {
                     gBase = signalFreqs[target]
                     if (baseNodes[target].playbackRate) {
-                        gainParam = new ParamWrapper(gainParam, 1 / 440)
+                        gainParam = new ParamWrapper(gainParam, 1 / 440, 0, 1)
                     }
                 }
                 var res = params.apply(note, gainParam, time, gBase, signal.gain, freq)
@@ -209,12 +217,19 @@ function Player(ctx, dest) {
             // apply frequency program, defaulting to an empty sweep
             var fqBase = (target < 0) ? freq : signalFreqs[target]
             var fqParam = (node.playbackRate) ?
-                new ParamWrapper(node.playbackRate, 1 / 440) :
+                new ParamWrapper(node.playbackRate, 1 / 440, 0, 1) :
                 node.frequency
             var fqResult = params.apply(note, fqParam, time, fqBase, signal.freq, freq)
             //   ..and remember base/peak value in signalFreqs
             signalFreqs[i] = fqResult
             fqParams[i] = fqParam
+
+            // remember fq param for bending
+            if (signal.freq.t) {
+                var mult = (fqBase / freq) * signal.freq.t
+                var wrapped = new ParamWrapper(fqParam, mult, signal.freq.f || 0, signal.freq.p)
+                note.fqParams.push(wrapped)
+            }
 
             // effects can have a Q value and program
             if (node.Q && signal.Q && nodeCreator.usesQ(node)) {
@@ -293,6 +308,23 @@ function Player(ctx, dest) {
 
     /*
      * 
+     *      BEND
+     *  hacking...
+     * 
+    */
+
+    function bend(note, freq, constant, time) {
+        if (note.endTime > 0) return
+        if (time < note.time) time = note.time
+        note.fqParams.forEach(param => {
+            param.cancelScheduledValues(time)
+            param.setTargetAtTime(freq, time, constant)
+        })
+    }
+
+
+    /*
+     * 
      *      RELEASE
      *  set release envelopes if there are any, etc.
      * 
@@ -335,14 +367,15 @@ function Player(ctx, dest) {
 
     function disposeNote(note) {
         var time = ctx.currentTime
-        note.nodes.forEach(node => {
+        for (var i = 0; i < note.nodes.length; i++) {
+            var node = note.nodes[i]
             node.disconnect()
             if (node.gain) node.gain.cancelScheduledValues(time)
             if (node.frequency) node.frequency.cancelScheduledValues(time)
             if (node.playbackRate) node.playbackRate.cancelScheduledValues(time)
             if (node.Q) node.Q.cancelScheduledValues(time)
             if (node.stop) node.stop()
-        })
+        }
         for (var s in note) if (note[s].length) note[s].length = 0
     }
 
@@ -352,13 +385,14 @@ function Player(ctx, dest) {
 
 
 // Wrapper to bake a multiplier value into an AudioParam
-function ParamWrapper(param, mult) {
+function ParamWrapper(param, mult, add, bend) {
     this.wrappedParam = param
-    // this.setValue = (v) => param.value = v * mult
-    this.setValueAtTime = (v, t) => param.setValueAtTime(v * mult, t)
-    this.setTargetAtTime = (v, t, c) => param.setTargetAtTime(v * mult, t, c)
+    if (isNaN(bend)) bend = 1
+    var calc = val => (val * mult + add) * bend
+    this.setValueAtTime = (v, t) => param.setValueAtTime(calc(v), t)
+    this.setTargetAtTime = (v, t, c) => param.setTargetAtTime(calc(v), t, c)
+    this.linearRampToValueAtTime = (v, t) => param.linearRampToValueAtTime(calc(v), t)
     this.cancelScheduledValues = (t) => param.cancelScheduledValues(t)
-    this.linearRampToValueAtTime = (v, t) => param.linearRampToValueAtTime(v * mult, t)
 }
 
 
