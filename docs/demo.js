@@ -16,6 +16,11 @@ var AudioContext = window.AudioContext || window.webkitAudioContext
 var ctx = new AudioContext()
 var gen, SoundGen
 
+
+
+var dest = ctx.createGain()
+dest.connect(ctx.destination)
+
 var viz = new Viz(ctx,
     document.querySelector('#waveform'),
     document.querySelector('#eq'),
@@ -106,8 +111,9 @@ gui.programChanged = function (prog) {
 function init() {
     if (gen) gen.dispose()
     SoundGen = require('..')
-    gen = new SoundGen(ctx)
-    viz.setNode(gen.monitor)
+    gen = new SoundGen(ctx, dest)
+    window.gen = gen
+    viz.setNode(gen.output)
 }
 
 
@@ -132,7 +138,7 @@ function keyToNote(k) {
 function playEvent(ev, down) {
     var focused = document.activeElement
     if (focused.type === 'text' || focused.type === 'textarea') return
-    
+
     if (ev.key === 'Shift') {
         if (down) {
             shifting = true
@@ -206,7 +212,7 @@ redoBut.onmousedown = function () {
 
 document.querySelector('#benchmark').onmousedown = function () {
     var N = 64
-    gen.setMaxVoices(N)
+    gen.maxVoices(N)
     var carrier = {
         type: 'sine',
         freq: { p: 1, },
@@ -238,6 +244,105 @@ document.querySelector('#benchmark').onmousedown = function () {
     }
 }
 
+
+
+// post effect rigging
+
+var postEl = document.getElementById('post')
+var post = createPostNode()
+if (post) post.out.connect(ctx.destination)
+
+postEl.onchange = function () {
+    if (!post) return
+    if (postEl.checked) {
+        dest.disconnect()
+        dest.connect(post.in)
+        viz.setNode(post.out)
+    } else {
+        dest.disconnect()
+        dest.connect(ctx.destination)
+        viz.setNode(gen.output)
+    }
+}
+
+// post effect particulars
+function createPostNode() {
+
+    // delay for testing
+    /* * /
+    var delay = ctx.createDelay()
+    delay.delayTime.value = 0.2
+    return { in: delay, out: delay }
+    /* */
+
+    // convolver
+    /* * /
+    var len = Math.floor(ctx.sampleRate / 2)
+    var convBuf = ctx.createBuffer(2, len, len * 2)
+    var d1 = convBuf.getChannelData(0)
+    var d2 = convBuf.getChannelData(1)
+    for (var i = 0; i < len; ++i) {
+        if (i / len < Math.random()) {
+            d1[i] = Math.exp(-3 * i / len) * (Math.random() - .5) * .5
+            d2[i] = Math.exp(-3 * i / len) * (Math.random() - .5) * .5
+        }
+    }
+    var conv = ctx.createConvolver()
+    conv.buffer = convBuf
+    var lin = ctx.createGain()
+    var out = ctx.createGain()
+    var wet = ctx.createGain()
+    lin.connect(out)
+    lin.connect(conv)
+    conv.connect(wet)
+    wet.connect(out)
+    wet.gain.value = 4
+    return { in: lin, out: out }
+    /* */
+
+    // cheap convolver
+    /* * /
+    var g1 = ctx.createGain()
+    var g2 = ctx.createGain()
+    var addEcho = function () {
+        var d = ctx.createDelay()
+        d.delayTime.value = (10 + Math.random() * 20) / 1000
+        g1.connect(d)
+        var g = ctx.createGain()
+        g.gain.value = 0.1 + Math.random() * 0.2
+        d.connect(g)
+        var f = ctx.createBiquadFilter()
+        f.type = 'allpass'
+        f.frequency.value = 200 + Math.random() * 2000
+        g.connect(f)
+        var f2 = ctx.createBiquadFilter()
+        f.type = 'lowpass'
+        f.frequency.value = 300 + Math.random() * 1000
+        f.connect(f2)
+        f2.connect(g2)
+    }
+    for (var i = 0; i < 5; i++) addEcho()
+    g2.gain.value = 2
+    var out = ctx.createGain()
+    g1.connect(out)
+    g2.connect(out)
+    return { in: g1, out: out }
+    /* */
+
+    // compressor
+    /* */
+    var comp = ctx.createDynamicsCompressor()
+    comp.threshold.value = -30   // -24
+    comp.knee.value = 30
+    comp.ratio.value = 12
+    comp.attack.value = 0        // 0.003
+    comp.release.value = 0.25
+    return { in: comp, out: comp }
+    /* */
+
+
+
+}
 
 
 

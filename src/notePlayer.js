@@ -54,6 +54,11 @@ function Player(ctx, dest) {
     }
 
 
+    this.dispose = function () {
+        while (currentNotes.length) {
+            disposeNote(currentNotes.pop())
+        }
+    }
 
 
 
@@ -275,6 +280,7 @@ function Player(ctx, dest) {
 
         // process stored nodes into output chain
         destChain.push(dest)
+
         var currDest = destChain[0]
         for (var j = 0; j < lineOuts.length; j++) {
             if (lineOuts[j]) {
