@@ -18,11 +18,18 @@ function Viz(ctx, div1, div2, div3, getFreq) {
     makeSpectrograph(analyser3, div3)
 
     this.setNode = function (tgt) {
+        if (prevTgt) {
+            prevTgt.disconnect(analyser1)
+            prevTgt.disconnect(analyser2)
+            prevTgt.disconnect(analyser3)
+        }
         node = tgt
         tgt.connect(analyser1)
         tgt.connect(analyser2)
         tgt.connect(analyser3)
+        prevTgt = tgt
     }
+    var prevTgt
 }
 
 var el = document.querySelector('#viz')
@@ -48,9 +55,11 @@ var fmax = 12000
 
 // color value for freq data [0..1]
 function makeColor(val) {
-    var h = Math.round(-50 + 100 * val)
-    var s = Math.round(50 + 50 * val)
-    var l = Math.round(10 + 90 * val)
+    if (val === 0) return '#000'
+    var h = Math.round(-80 + 130 * val)
+    var s = 100
+    var l = Math.round(40 + 20 * val)
+    if (val === 1) l += 40
     return `hsl(${h},${s}%,${l}%)`
 }
 
@@ -123,7 +132,7 @@ function makeWaveform(analyser, canvas, getFreq) {
         for (var x = 0; x < width; x++) {
             var xval = x / width
             var index = Math.round(startIndex + xval * (endIndex - startIndex))
-            var amt = +dataArray[index] / 256
+            var amt = +dataArray[index] / 255
             var y = amt * height
 
             canvasCtx.lineTo(x, y)
@@ -164,7 +173,7 @@ function makeEQ(analyser, canvas) {
             var val = x / (width - 1)
             var freq = fractionToFreq(val)
             var index = freqToIndex(analyser, freq)
-            var amt = +dataArray[index] / 256
+            var amt = +dataArray[index] / 255
             var y = Math.round(amt * height)
 
             canvasCtx.fillStyle = makeColor(amt)
@@ -208,7 +217,7 @@ function makeSpectrograph(analyser, canvas) {
             var freq = fractionToFreq(val)
             var index = freqToIndex(analyser, freq)
 
-            var amt = +dataArray[index] / 256
+            var amt = +dataArray[index] / 255
             canvasCtx.fillStyle = makeColor(amt)
             canvasCtx.fillRect(width - speed, y, speed, 1)
         }
