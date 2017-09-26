@@ -32,8 +32,8 @@ function SoundGen(audioContext, destination) {
 
     this.output = output
 
-    this.play = function (program, freq, vel, time, releaseTime) {
-        var noteID = player.play(program, freq, vel, time, releaseTime)
+    this.play = function (program, freq, vel, time, releaseTime, destNode) {
+        var noteID = player.play(program, freq, vel, time, releaseTime, destNode)
         return noteID
     }
 
@@ -43,6 +43,10 @@ function SoundGen(audioContext, destination) {
 
     this.release = function (noteID, time) {
         player.release(noteID, time)
+    }
+
+    this.noteIsPlaying = function (noteID) {
+        return player.isPlaying(noteID)
     }
 
     this.releaseAll = function (time) {

@@ -12,6 +12,15 @@ module.exports = Player
 function Player(ctx, dest) {
 
 
+    /*
+     * 
+     *      state
+     * 
+    */
+
+    var currentNotes = []
+    var currentNoteIDHash = {}
+
 
     /*
      * 
@@ -23,10 +32,10 @@ function Player(ctx, dest) {
 
 
 
-    this.play = function (program, freq, vel, time, releaseTime) {
+    this.play = function (program, freq, vel, time, releaseTime, destNode) {
         time = time || ctx.currentTime
         enforceMaxVoices(this.maxVoices - 1)
-        var note = addNote(program, freq, vel, time, dest)
+        var note = addNote(program, freq, vel, time, destNode || dest)
         if (releaseTime) releaseNote(note, releaseTime)
         return note.id
     }
@@ -45,6 +54,10 @@ function Player(ctx, dest) {
         if (note) releaseNote(note, time)
     }
 
+    this.isPlaying = function (noteID) {
+        return !!currentNoteIDHash[noteID]
+    }
+
 
     this.releaseAll = function (time) {
         time = time || ctx.currentTime
@@ -56,7 +69,9 @@ function Player(ctx, dest) {
 
     this.dispose = function () {
         while (currentNotes.length) {
-            disposeNote(currentNotes.pop())
+            var note = currentNotes.pop()
+            disposeNote(note)
+            delete currentNoteIDHash[note.id]
         }
     }
 
@@ -71,7 +86,7 @@ function Player(ctx, dest) {
 
 
 
-    var currentNotes = []
+
 
 
     function enforceMaxVoices(limit) {
@@ -80,13 +95,16 @@ function Player(ctx, dest) {
         pruneEndedNotes()
         // if still too many, just dispose stuff, oldest first
         while (currentNotes.length > limit) {
-            disposeNote(currentNotes.shift())
+            var note = currentNotes.shift()
+            disposeNote(note)
+            delete currentNoteIDHash[note.id]
         }
     }
 
     function addNote(program, freq, vel, time, dest) {
         var note = makeNote(program, freq, vel, time, dest)
         currentNotes.push(note)
+        currentNoteIDHash[note.id] = true
         return note
     }
 
@@ -109,6 +127,7 @@ function Player(ctx, dest) {
             if (note.endTime > 0 && t >= note.endTime) {
                 disposeNote(note)
                 currentNotes.splice(i, 1)
+                delete currentNoteIDHash[note.id]
                 i--
             }
         }
