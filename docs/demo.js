@@ -169,8 +169,8 @@ function playEvent(ev, down) {
 
 
 
-document.querySelector('#play').onmousedown = ev => playEvent(ev, true)
-document.querySelector('#play').onmouseup = ev => playEvent(ev, false)
+document.querySelector('#play').onpointerdown = ev => playEvent(ev, true)
+document.querySelector('#play').onpointerup = ev => playEvent(ev, false)
 window.onkeydown = ev => playEvent(ev, true)
 window.onkeyup = ev => playEvent(ev, false)
 
@@ -212,6 +212,8 @@ redoBut.onmousedown = function () {
 
 document.querySelector('#benchmark').onmousedown = function () {
     var N = 64
+    // HACK!
+    if (/(mobile|android|iOS)/i.test(navigator.userAgent)) N = 16
     gen.maxVoices(N)
     var carrier = {
         type: 'sine',
@@ -221,7 +223,7 @@ document.querySelector('#benchmark').onmousedown = function () {
     var FM = {
         type: 'sine',
         target: '0.freq',
-        freq: {},
+        freq: { t: 0.1, f: 100 },
         gain: {},
     }
     var filter = {
@@ -230,16 +232,16 @@ document.querySelector('#benchmark').onmousedown = function () {
         freq: { t: 0, f: 1000, p: 1.1 },
         gain: { a: 0.2 },
     }
-    var program = [carrier, filter]
+    var program = [carrier, FM, filter]
     for (var i = 0; i < N; i++) {
         carrier.freq.p = (Math.random() < 0.5) ? 1 : 0.5 + Math.random()
         carrier.gain.a = Math.random() / 5
         filter.freq.f = 500 + 1000 * Math.random()
-        var note = 45 + (70 * Math.random()) | 0
+        var note = 65 + (30 * Math.random()) | 0
         var freq = 440 * Math.pow(2, (note - 69) / 12)
         var vol = 0.3
         var time = gen.now() + i * (1 / N)
-        var releaseTime = time + 0.5 + Math.random()
+        var releaseTime = time + 1.5 + Math.random()
         gen.play(program, freq, vol, time, releaseTime)
     }
 }
