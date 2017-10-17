@@ -363,15 +363,16 @@ function Player(ctx, dest) {
         note.envParams.forEach((param, i) => {
             param.cancelScheduledValues(time)
 
-            // set current value if release happens during attack ramp
+            // if release happens during attack ramp have to redo it
             var noteStart = note.time
             var peakTime = noteStart + note.envAttacks[i]
             if (time <= peakTime) {
-                var releaseVal = note.envPeaks[i]
-                if (time < peakTime) releaseVal *= (time - noteStart) / (peakTime - noteStart)
-                param.setValueAtTime(releaseVal, time)
+                param.cancelScheduledValues(time)
+                var peakVal = note.envPeaks[i]
+                if (time < peakTime) peakVal *= (time - noteStart) / (peakTime - noteStart)
+                param.linearRampToValueAtTime(peakVal, time)
             }
-
+            
             // apply release decay
             var relConst = note.envReleases[i]
             param.setTargetAtTime(0, time, relConst)
