@@ -411,6 +411,7 @@ function Player(ctx, dest) {
 
 // Wrapper to bake a multiplier value into an AudioParam
 function ParamWrapper(param, mult, add, bend) {
+    this.value = 0
     this.wrappedParam = param
     if (isNaN(bend)) bend = 1
     var calc = val => (val * mult + add) * bend

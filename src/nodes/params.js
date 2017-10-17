@@ -89,6 +89,9 @@ function Params() {
 
     // apply an envelope program
     function applyParamEnvelope(note, param, time, peak, prog) {
+        param.value = 0
+        param.setValueAtTime(0, 0)
+
         peak = clamp(peak * prog.v)
 
         if (prog.a > 0) {
@@ -108,7 +111,7 @@ function Params() {
         note.envPeaks.push(peak)
         note.envReleases.push(prog.r || 0)
 
-        // console.log('   param env:  0 -> ', peak, ' -> ' , peak * prog.s, ' -> 0')
+        // console.log(`   param env: 0  (${prog.a})=> ${peak}   (${prog.h})=> ${peak * prog.s}   (${prog.r})=> 0`)
 
         return peak
     }
