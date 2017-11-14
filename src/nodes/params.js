@@ -45,7 +45,7 @@ function Params() {
         var target = clamp(value * prog.p)
         if (bend) param.setTargetAtTime(target, time, prog.q)
 
-        // console.log('   param sweep:', value, bend ? ' --> ' + target : '')
+        // console.log(`   param sweep:  val:${value}   (q:${prog.q})=> ${target}`)
 
         if (prog.j && prog.jt) {
             var jarr = prog.j
@@ -71,12 +71,13 @@ function Params() {
                         t += jt
                         param.setValueAtTime(v, time + t)
                     }
-                    // console.log('   param jump:', old, 'to', v, bend ? ' --> ' + target : '')
+
                 }
             }
         }
         return value
     }
+
 
     // evaluate value of param during a setTarget curve
     // https://webaudio.github.io/web-audio-api/#widl-AudioParam-setTargetAtTime-AudioParam-float-target-double-startTime-float-timeConstant
@@ -100,9 +101,10 @@ function Params() {
         } else {
             param.setValueAtTime(peak, time)
         }
+        var sustain = peak
         if (prog.s !== 1) {
             var decayTime = time + prog.a + prog.h
-            var sustain = clamp(peak * prog.s)
+            sustain = clamp(peak * prog.s)
             param.setTargetAtTime(sustain, decayTime, prog.d)
         }
         // store values in the note object so that stuff can be done at release time
@@ -111,7 +113,7 @@ function Params() {
         note.envPeaks.push(peak)
         note.envReleases.push(prog.r || 0)
 
-        // console.log(`   param env: 0  (${prog.a})=> ${peak}   (${prog.h})=> ${peak * prog.s}   (${prog.r})=> 0`)
+        // console.log(`   param env: 0  (a:${prog.a})=> peak:${peak}   (h:${prog.h})   (d:${prog.d})=> s:${sustain}   (r:${prog.r})=> 0`)
 
         return peak
     }

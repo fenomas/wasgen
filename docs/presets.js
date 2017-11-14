@@ -93,7 +93,40 @@ module.exports = function Presets() {
     }
 
 
+    this.bonk = () => [
+        {
+            type: 'n0',
+            freq: { t: 0, f: 440 },
+            gain: { v: 1, a: 0, h: 0, d: 0.02, s: 0, r: 0.02 }
+        },
+        { type: 'lowpass', freq: { t: 2 }, Q: 10 },
+        { type: 'highpass', freq: { t: 1 / 2 }, Q: 10 },
+    ]
 
+
+    this.kick = () => [
+        {
+            type: 'sine',
+            freq: { p: 0.3, q: 0.1 },
+            gain: { a: 0, h: 0, s: 0, d: 0.1, r: 0.1 },
+        }, {
+            type: 'square',
+            freq: { t: 0.5 },
+            gain: { v: 0.5, a: 0, h: 0, s: 0, d: 0.02, r: 0.02 },
+        },
+    ]
+
+
+    this.hat = () => [
+        {
+            type: 'n0',
+            freq: { t: 0, f: 440 },
+            gain: { a: 0, s:0, h: 0, d: 0.02, r: 0.02 }
+        }, {
+            type: 'highpass',
+            freq: { t: 10 },
+        },
+    ]
 
 
 }

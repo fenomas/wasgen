@@ -90,8 +90,14 @@ function applyPreset(prog) {
     currentProgram = prog
 }
 
-// init to preset 0 on page load
-setTimeout(importPreset, 0)
+// init to demo program on page load
+setTimeout(function () {
+    // importPreset()
+    currentProgram = [
+        { type: 'sine', freq: {}, gain: { v: 1, a: 0.01, d: 0.1, h: 0, s: 0, r: 0.01 } }
+    ]
+    gui.setProgram(currentProgram)
+}, 0)
 
 // receive program updates from gui
 gui.programChanged = function (prog) {
@@ -291,48 +297,63 @@ function createPostNode() {
     }
     var conv = ctx.createConvolver()
     conv.buffer = convBuf
-    var lin = ctx.createGain()
+    var input = ctx.createGain()
     var out = ctx.createGain()
     var wet = ctx.createGain()
-    lin.connect(out)
-    lin.connect(conv)
+    // input.connect(out)
+    input.connect(conv)
     conv.connect(wet)
     wet.connect(out)
-    wet.gain.value = 4
-    return { in: lin, out: out }
+    wet.gain.value = 2
+    return { in: input, out: out }
     /* */
 
     // cheap convolver
-    /* * /
-    var g1 = ctx.createGain()
-    var g2 = ctx.createGain()
-    var addEcho = function () {
-        var d = ctx.createDelay()
-        d.delayTime.value = (10 + Math.random() * 20) / 1000
-        g1.connect(d)
-        var g = ctx.createGain()
-        g.gain.value = 0.1 + Math.random() * 0.2
-        d.connect(g)
-        var f = ctx.createBiquadFilter()
-        f.type = 'allpass'
-        f.frequency.value = 200 + Math.random() * 2000
-        g.connect(f)
-        var f2 = ctx.createBiquadFilter()
-        f.type = 'lowpass'
-        f.frequency.value = 300 + Math.random() * 1000
-        f.connect(f2)
-        f2.connect(g2)
+    /* */
+    var CombFilter = require('comb')
+
+    var input = ctx.createGain()
+    var output = ctx.createGain()
+    var splitter = ctx.createChannelSplitter(2)
+    input.connect(splitter)
+    var merger = ctx.createChannelMerger(2)
+    // for (var d of [1557, 1617, 1491, 1422, 1277, 1356, 1188, 1116]) {
+    for (var d of [1116, 1277, 1491, 1617]) {
+        var damp = 0.35
+        var comb0 = new CombFilter(ctx, {
+            delay: d / 44100,
+            feedback: 0.84,
+            damping: damp,
+            cutoff: 8000
+        })
+        var comb1 = new CombFilter(ctx, {
+            delay: (d + 23) / 44100,
+            feedback: 0.84,
+            damping: damp,
+            cutoff: 8000
+        })
+        splitter.connect(comb0.input, 0)
+        splitter.connect(comb1.input, 1)
+        comb0.output.connect(merger, 0, 0)
+        comb1.output.connect(merger, 0, 1)
     }
-    for (var i = 0; i < 5; i++) addEcho()
-    g2.gain.value = 2
-    var out = ctx.createGain()
-    g1.connect(out)
-    g2.connect(out)
-    return { in: g1, out: out }
+    var serial = merger
+    // for (var f of [225, 556, 441, 341]) {
+    for (var f of [556, 341]) {
+        var filter = ctx.createBiquadFilter()
+        filter.type = 'allpass'
+        filter.frequency.value = f
+        filter.gain.value = 0.5
+        serial.connect(filter)
+        serial = filter
+    }
+    serial.connect(output)
+    input.connect(output)
+    return { in: input, out: output }
     /* */
 
     // compressor
-    /* */
+    /* * /
     var comp = ctx.createDynamicsCompressor()
     comp.threshold.value = -30   // -24
     comp.knee.value = 30

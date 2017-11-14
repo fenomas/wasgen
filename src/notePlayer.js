@@ -372,11 +372,11 @@ function Player(ctx, dest) {
                 if (time < peakTime) peakVal *= (time - noteStart) / (peakTime - noteStart)
                 param.linearRampToValueAtTime(peakVal, time)
             }
-            
+
             // apply release decay
             var relConst = note.envReleases[i]
             param.setTargetAtTime(0, time, relConst)
-            var relTime = time + relConst * 4 // ish
+            var relTime = time + relConst * 5 // ish
             if (relTime > maxRel) maxRel = relTime
         })
 

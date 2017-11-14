@@ -50,7 +50,7 @@ var sampleRate
 var minDecibels = -90
 var maxDecibels = -20
 
-var fmin = 150
+var fmin = 50
 var fmax = 12000
 
 // color value for freq data [0..1]
@@ -75,6 +75,15 @@ var fractionToFreq = (function () {
 var freqToIndex = function (analyser, freq) {
     var nyquist = sampleRate / 2
     return Math.round(freq / nyquist * analyser.frequencyBinCount)
+}
+
+var mx = 0, mn = 1
+var valueToHeight = function (val) {
+    mx = Math.max(mx, val)
+    mn = Math.min(mn, val)
+    window.s = [mx, mn]
+    if (val > 255) console.log(val)
+    return (val * val / 255 / 255)
 }
 
 var timeToSamples = function (time) {
@@ -132,7 +141,7 @@ function makeWaveform(analyser, canvas, getFreq) {
         for (var x = 0; x < width; x++) {
             var xval = x / width
             var index = Math.round(startIndex + xval * (endIndex - startIndex))
-            var amt = +dataArray[index] / 255
+            var amt = dataArray[index] / 255
             var y = amt * height
 
             canvasCtx.lineTo(x, y)
@@ -173,7 +182,7 @@ function makeEQ(analyser, canvas) {
             var val = x / (width - 1)
             var freq = fractionToFreq(val)
             var index = freqToIndex(analyser, freq)
-            var amt = +dataArray[index] / 255
+            var amt = valueToHeight(dataArray[index])
             var y = Math.round(amt * height)
 
             canvasCtx.fillStyle = makeColor(amt)
@@ -217,7 +226,7 @@ function makeSpectrograph(analyser, canvas) {
             var freq = fractionToFreq(val)
             var index = freqToIndex(analyser, freq)
 
-            var amt = +dataArray[index] / 255
+            var amt = valueToHeight(dataArray[index])
             canvasCtx.fillStyle = makeColor(amt)
             canvasCtx.fillRect(width - speed, y, speed, 1)
         }
