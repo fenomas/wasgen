@@ -1,15 +1,16 @@
 {
   "name": "soundgen",
-  "version": "0.0.1",
-  "description": "experimental",
+  "version": "0.1.0",
+  "description": "Web Audio sound generator",
   "main": "src/index.js",
   "scripts": {
     "start": "(cd docs; webpack-dev-server)",
     "build": "(cd docs; webpack -p)"
   },
-  "author": "andy",
-  "license": "UNLICENSED",
+  "author": "andy@fenomas.com",
+  "license": "MIT",
   "devDependencies": {
+    "comb": "web-audio-components/comb",
     "webpack": "^3.5.5",
     "webpack-dev-server": "^2.7.1"
   }
