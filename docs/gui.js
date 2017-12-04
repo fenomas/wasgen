@@ -96,6 +96,7 @@ function removeDefaults(prog) {
             sweepProps.forEach(p => fill(p, obj.gain, ret.gain, defSig.gain))
             envProps.forEach(p => fill(p, obj.gain, ret.gain, defSig.gain))
         } else ret.gain = obj.gain
+        if (obj.Q) ret.Q = obj.Q
         return ret
     })
 }
@@ -115,6 +116,7 @@ function formatProgram(prog) {
             return sig[p] ? formatProp(sig, p) : ''
         }).filter(p => p).join(', ')
         if (line1.length > 5) line1 += ', '
+        if (sig.Q) line1 += 'Q:' + sig.Q + ', '
         var line2 = formatLine('freq', sig, sweepProps) + ', '
         var line3 = formatLine('gain', sig, envProps) + ' }, '
         lines.push(line1, line2, line3)

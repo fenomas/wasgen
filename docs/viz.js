@@ -58,8 +58,8 @@ function makeColor(val) {
     if (val === 0) return '#000'
     var h = Math.round(-80 + 130 * val)
     var s = 100
-    var l = Math.round(40 + 20 * val)
-    if (val === 1) l += 40
+    var l = Math.round(20 + 50 * val)
+    if (val > 0.99) l += 30
     return `hsl(${h},${s}%,${l}%)`
 }
 
@@ -81,7 +81,6 @@ var mx = 0, mn = 1
 var valueToHeight = function (val) {
     mx = Math.max(mx, val)
     mn = Math.min(mn, val)
-    window.s = [mx, mn]
     if (val > 255) console.log(val)
     return (val * val / 255 / 255)
 }

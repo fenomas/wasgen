@@ -75,7 +75,10 @@ function Sources(ctx) {
         if (!periodicWaves[name]) {
             var imag = new Float32Array(name.length)
             var real = new Float32Array(name.length)
-            for (var i = 1; i < name.length; ++i) imag[i] = parseFloat(name[i])
+            for (var i = 1; i < name.length; ++i) {
+                var num = parseFloat(name[i]) / 9
+                imag[i] = num * num
+            }
             periodicWaves[name] = ctx.createPeriodicWave(real, imag)
         }
         return periodicWaves[name]
@@ -101,7 +104,7 @@ function Sources(ctx) {
     }
 
     var noiseBuffers = {}
-    var blen = (ctx.sampleRate / 2) | 0
+    var blen = (ctx.sampleRate) | 0
 
     // n0 - white noise
     noiseBuffers.n0 = (function () {

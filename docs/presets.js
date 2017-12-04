@@ -121,7 +121,7 @@ module.exports = function Presets() {
         {
             type: 'n0',
             freq: { t: 0, f: 440 },
-            gain: { a: 0, s:0, h: 0, d: 0.02, r: 0.02 }
+            gain: { a: 0, s: 0, h: 0, d: 0.02, r: 0.02 }
         }, {
             type: 'highpass',
             freq: { t: 10 },
@@ -129,6 +129,24 @@ module.exports = function Presets() {
     ]
 
 
+    this.wind = () => [
+        {
+            type: 'n0',
+            freq: { t: 0, f: 440 },
+            gain: { a: 1, h: 0, d: 0, s: 1, r: 0.5 }
+        }, {
+            // vibrato
+            type: 'sine', target: '0.gain',
+            freq: { t: 0, f: .3 },
+            gain: { v:0.2, a: 1, h: 0, d: 0, s: 1, r: 0.5 }
+        },
+        { type: 'lowpass', Q: 10, freq: { t: 1.2 }, },
+        { type: 'highpass', Q: 10, freq: { t: 0.9 }, },
+    ]
+
+
+
+    
 }
 
 

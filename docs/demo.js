@@ -56,6 +56,7 @@ function playNote(note) {
     var vel = gui.getVelocity()
     var freq = noteToFreq(note)
     lastFrequency = freq
+    console.log('note', note, 'freq', freq)
     var time = gen.now() + 0.01 // playing at zero delay usually means clicks
     currNotes[note] = gen.play(program, freq, vel, time)
 }
