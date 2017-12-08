@@ -90,7 +90,6 @@ function Params() {
 
     // apply an envelope program
     function applyParamEnvelope(note, param, time, peak, prog) {
-        param.value = 0
         param.setValueAtTime(0, 0)
 
         peak = clamp(peak * prog.v)
