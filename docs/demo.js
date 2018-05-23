@@ -44,6 +44,7 @@ var currentProgram
 var currNotes = {}
 var lowestNote = 45
 var lastFrequency = 440
+var lastNotePlayed = 69
 
 function noteToFreq(note) {
     note = 69 + Math.round((note - 69) * 1.6)
@@ -52,6 +53,7 @@ function noteToFreq(note) {
 
 function playNote(note) {
     if (currNotes[note]) return
+    lastNotePlayed = note
     var program = currentProgram
     var vel = gui.getVelocity()
     var freq = noteToFreq(note)
@@ -214,9 +216,25 @@ redoBut.onmousedown = function () {
     presetPD2.onchange()
 }
 
+// program text changes
+document.getElementById('progText').addEventListener('input', ev => {
+    progEdited = true
+})
+
+setInterval(function () {
+    if (sinceProgSound) sinceProgSound--
+    if (!progEdited || sinceProgSound) return
+    playNote(lastNotePlayed)
+    releaseNote(lastNotePlayed, gen.now() + 0.5)
+    progEdited = false
+    sinceProgSound = 10
+}, 100)
+var progEdited = false
+var sinceProgSound = 0
+
+
 
 // benchmark - just play a load of sounds overlapped
-
 document.querySelector('#benchmark').onmousedown = function () {
     var N = 64
     // HACK!
@@ -344,7 +362,7 @@ function createPostNode() {
         var filter = ctx.createBiquadFilter()
         filter.type = 'allpass'
         filter.frequency.value = f
-        filter.gain.value = 0.5
+        filter.gain.setValueAtTime(0.5, 0)
         serial.connect(filter)
         serial = filter
     }

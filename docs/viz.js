@@ -47,8 +47,8 @@ var enabled = function () {
 var node
 var sampleRate
 
-var minDecibels = -90
-var maxDecibels = -20
+var minDecibels = -96
+var maxDecibels = -15
 
 var fmin = 50
 var fmax = 12000
