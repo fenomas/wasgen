@@ -198,8 +198,8 @@ function Player(ctx, dest) {
 
             // create base node - either a source or an effect
             var type = signal.type
-            var isSource = sources.isSource(type)
-            var nodeCreator = isSource ? sources : effects
+            var isEffect = effects.isFilter(type)
+            var nodeCreator = isEffect ? effects : sources
             var node = nodeCreator.createNode(type)
             if (node.start) node.start(time)
             note.nodes.push(node)
@@ -263,7 +263,7 @@ function Player(ctx, dest) {
             // nodes and params ready, prepare connection chains
 
             // if node is an effect, put it somewhere in the output chain
-            if (!isSource) {
+            if (isEffect) {
                 if (target < 0 || !lineOuts[target]) {
                     destChain.push(node)
                 } else {

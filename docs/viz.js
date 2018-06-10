@@ -81,7 +81,6 @@ var mx = 0, mn = 1
 var valueToHeight = function (val) {
     mx = Math.max(mx, val)
     mn = Math.min(mn, val)
-    if (val > 255) console.log(val)
     return (val * val / 255 / 255)
 }
 

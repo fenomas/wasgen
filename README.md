@@ -2,7 +2,7 @@
 
 ----
 
-Experimental. Takes in a parameter object and generates a web audio sound.
+Powerful low-level sound generator for web audio.
 
 [Demo](https://andyhall.github.io/soundgen/build/) ← open that and hit keys to play sounds
 
@@ -12,7 +12,7 @@ Experimental. Takes in a parameter object and generates a web audio sound.
 var SoundGen = require('soundgen')
 
 var ctx = new AudioContext
-var dest = ctx.destination // optional
+var dest = ctx.destination // optional webaudio node
 var gen = new SoundGen(ctx, dest)
 
 var program = [{ }] // see demo page to create programs

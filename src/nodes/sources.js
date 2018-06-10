@@ -7,7 +7,6 @@ module.exports = Sources
 /*
  * 
  *      general handler to create an audio source (oscillator / buffer)
- *                  OR a biquad filter
  * 
 */
 
@@ -21,17 +20,16 @@ function Sources(ctx) {
         tr: 'triangle',
     }
 
+    var noiseTypes = {
+        n0: 'n0',
+        n1: 'n1',
+        np: 'np',
+    }
+
+
 
 
     // info accessors
-
-    this.isSource = function (type) {
-        var ty = type.substr(0, 2)
-        if (oscillatorTypes[ty]) return true
-        var t = type[0]
-        if (t === 'n' || t === 'w') return true
-        return false
-    }
 
     this.usesGain = function (node) { return true }
     this.usesQ = function (node) { return false }
@@ -41,12 +39,15 @@ function Sources(ctx) {
     // source creation
 
     this.createNode = function (type) {
+        var ty = type.substr(0, 2)
+        if (noiseTypes[ty]) return createNoise(noiseTypes[ty])
         var t = type[0]
-        if (t === 'n') return createNoise(type)
         if (t === 'w') return createWave(type)
 
-        var name = oscillatorTypes[type.substr(0, 2)]
-        return createOscillator(name || 'sine')
+        if (oscillatorTypes[ty]) return createOscillator(oscillatorTypes[ty])
+        if (t === 'n') return createNoise('n0')
+        if (t === 't') return createOscillator('triangle')
+        return createOscillator('sine')
     }
 
 
