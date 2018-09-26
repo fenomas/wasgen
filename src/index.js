@@ -21,8 +21,9 @@ function SoundGen(audioContext, destination) {
     // output chain
     var AudioContext = window.AudioContext || window.webkitAudioContext
     var ctx = audioContext || new AudioContext()
+    var dest = destination || ctx.destination
     var output = ctx.createGain()
-    output.connect(destination || ctx.destination)
+    output.connect(dest)
 
     // note player lib
     var player = new NotePlayer(ctx, output)
@@ -63,8 +64,20 @@ function SoundGen(audioContext, destination) {
     }
 
     this.dispose = function () {
+        output.disconnect()
         player.dispose()
     }
+
+    this.setContext = function (newContext, newDestination) {
+        output.disconnect()
+        ctx = newContext
+        dest = newDestination || ctx.destination
+        output = ctx.createGain()
+        output.connect(dest)
+        this.output = output
+        player.setContext(ctx, output)
+    }
+
 
 }
 

@@ -76,6 +76,14 @@ function Player(ctx, dest) {
     }
 
 
+    this.setContext = function (newContext, newDest) {
+        ctx = newContext
+        dest = newDest
+        sources.setContext(ctx)
+        effects.setContext(ctx)
+    }
+
+
 
 
     /*
@@ -235,7 +243,7 @@ function Player(ctx, dest) {
                         gainParam = new ParamWrapper(gainParam, 1 / 440, 0, 1)
                     }
                 }
-                var res = params.apply(note, gainParam, time, gBase, signal.gain, freq)
+                params.apply(note, gainParam, time, gBase, signal.gain, freq)
             }
 
             // apply frequency program, defaulting to an empty sweep
@@ -323,10 +331,6 @@ function Player(ctx, dest) {
     }
 
 
-    function isSet(o) {
-        if (typeof o === 'number') return true
-        return !!(o && Object.keys(o).length)
-    }
 
 
 

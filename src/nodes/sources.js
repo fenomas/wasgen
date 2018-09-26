@@ -13,6 +13,9 @@ module.exports = Sources
 
 function Sources(ctx) {
 
+    this.setContext = newCtx => { ctx = newCtx }
+
+
     var oscillatorTypes = {
         si: 'sine',
         sq: 'square',
@@ -105,7 +108,8 @@ function Sources(ctx) {
     }
 
     var noiseBuffers = {}
-    var blen = (ctx.sampleRate) | 0
+    var noiseLen = 0.5 // seconds
+    var blen = (noiseLen * ctx.sampleRate) | 0
 
     // n0 - white noise
     noiseBuffers.n0 = (function () {

@@ -14,6 +14,9 @@ module.exports = Effects
 
 function Effects(ctx) {
 
+    this.setContext = newCtx => { ctx = newCtx }
+    
+
     var filterTypes = {
         pe: 'peaking',
         ba: 'bandpass',
