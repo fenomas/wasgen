@@ -77,12 +77,25 @@ function Player(ctx, dest) {
 
 
     this.setContext = function (newContext, newDest) {
+        while (currentNotes.length) {
+            var note = currentNotes.pop()
+            disposeNote(note)
+            delete currentNoteIDHash[note.id]
+        }
         ctx = newContext
         dest = newDest
         sources.setContext(ctx)
         effects.setContext(ctx)
     }
 
+
+    this.stopAllNodesAt = function (t) {
+        currentNotes.forEach(note => {
+            note.nodes.forEach(node => {
+                if (node.stop) node.stop(t)
+            })
+        })
+    }
 
 
 

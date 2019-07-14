@@ -78,6 +78,11 @@ function SoundGen(audioContext, destination) {
         player.setContext(ctx, output)
     }
 
+    this.stopAllNodesAt = function (t) {
+        // hacking...
+        player.stopAllNodesAt(t)
+    }
+
 
 }
 
