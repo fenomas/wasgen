@@ -10,8 +10,8 @@
   "author": "andy@fenomas.com",
   "license": "MIT",
   "devDependencies": {
-    "comb": "web-audio-components/comb",
-    "webpack": "^3.5.5",
-    "webpack-dev-server": "^2.7.1"
+    "webpack": "^4.35.3",
+    "webpack-cli": "^3.3.5",
+    "webpack-dev-server": "^3.7.2"
   }
 }
