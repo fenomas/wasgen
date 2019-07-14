@@ -18,11 +18,7 @@ function Viz(ctx, div1, div2, div3, getFreq) {
     makeSpectrograph(analyser3, div3)
 
     this.setNode = function (tgt) {
-        if (prevTgt) {
-            prevTgt.disconnect(analyser1)
-            prevTgt.disconnect(analyser2)
-            prevTgt.disconnect(analyser3)
-        }
+        if (prevTgt) prevTgt.disconnect()
         node = tgt
         tgt.connect(analyser1)
         tgt.connect(analyser2)

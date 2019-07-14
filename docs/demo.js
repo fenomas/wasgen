@@ -12,21 +12,28 @@ var Presets = require('./presets')
  *      Persistent state
 */
 
-var AudioContext = window.AudioContext || window.webkitAudioContext
-var ctx = new AudioContext()
+var ctx, dest
 var gen, SoundGen
+var viz
 
 
+function initContext() {
+    if (ctx) return
+    var AudioContext = window.AudioContext || window.webkitAudioContext
+    ctx = new AudioContext()
+    dest = ctx.createGain()
+    dest.connect(ctx.destination)
 
-var dest = ctx.createGain()
-dest.connect(ctx.destination)
+    viz = new Viz(ctx,
+        document.querySelector('#waveform'),
+        document.querySelector('#eq'),
+        document.querySelector('#spectrograph'),
+        () => lastFrequency
+    )
+    initPost()
+}
 
-var viz = new Viz(ctx,
-    document.querySelector('#waveform'),
-    document.querySelector('#eq'),
-    document.querySelector('#spectrograph'),
-    () => lastFrequency
-)
+
 
 var state = {}
 var gui = new Gui(state)
@@ -52,6 +59,7 @@ function noteToFreq(note) {
 }
 
 function playNote(note) {
+    initOnce()
     if (currNotes[note]) return
     lastNotePlayed = note
     var program = currentProgram
@@ -114,16 +122,29 @@ gui.programChanged = function (prog) {
 
 
 /*
- *      Init - each time soundgen is hot-reloaded
+ *      Init
+ *      run once on user event, 
+ *      and again each time soundgen is hot-reloaded
 */
 
 function init() {
+    initContext()
     if (gen) gen.dispose()
     SoundGen = require('..')
     gen = new SoundGen(ctx, dest)
     window.gen = gen
     viz.setNode(gen.output)
 }
+
+function initOnce() {
+    if (initted) return
+    initted = true
+    init()
+}
+var initted = false
+
+
+document.onmousedown = document.onkeydown = initOnce
 
 
 
@@ -275,22 +296,26 @@ document.querySelector('#benchmark').onmousedown = function () {
 
 // post effect rigging
 
-var postEl = document.getElementById('post')
-var post = createPostNode()
-if (post) post.out.connect(ctx.destination)
+function initPost() {
+    var postEl = document.getElementById('post')
+    var post = createPostNode()
+    if (post) post.out.connect(ctx.destination)
 
-postEl.onchange = function () {
-    if (!post) return
-    if (postEl.checked) {
-        dest.disconnect()
-        dest.connect(post.in)
-        viz.setNode(post.out)
-    } else {
-        dest.disconnect()
-        dest.connect(ctx.destination)
-        viz.setNode(gen.output)
+    postEl.onchange = function () {
+        if (!post) return
+        if (postEl.checked) {
+            dest.disconnect()
+            dest.connect(post.in)
+            viz.setNode(post.out)
+        } else {
+            dest.disconnect()
+            dest.connect(ctx.destination)
+            viz.setNode(gen.output)
+        }
     }
 }
+
+
 
 // post effect particulars
 function createPostNode() {
@@ -329,7 +354,7 @@ function createPostNode() {
 
     // cheap convolver
     /* */
-    var CombFilter = require('comb')
+    var CombFilter = require('./lib/comb')
 
     var input = ctx.createGain()
     var output = ctx.createGain()
@@ -398,6 +423,6 @@ function createPostNode() {
 if (module.hot) {
     module.hot.accept('..', init)
 }
-init()
+
 
 
