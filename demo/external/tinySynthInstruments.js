@@ -1,41 +1,44 @@
-'use strict'
-
-module.exports = Instruments
 
 
+/*
+ * 
+ *      boilerplate accessors
+ * 
+*/
 
-function Instruments() {
-    var self = this
+export function Instruments() {
 
-    this.names = []
-    instNames.forEach(obj => this.names.push(obj.name))
-    drumNames.forEach(obj => this.names.push(obj.name))
+    var allNames = instNames.concat(drumNames).map(o => o.name)
+    var lowered = allNames.map(n => n.toLowerCase())
+    this.names = allNames
 
-
-    this.getProg = function (name, quality) {
+    this.getProg = function (name) {
         // find instrument name
         var i = nameToIndex(name)
-        var drum = (i >= program0.length)
-        if (drum) i -= program0.length
-        var lists = (drum) ?
-            [drums0, drums1] :
-            [program0, program1]
-        var q = (quality) ? 1 : 0
-        return lists[q][i] || lists[0][i]
+        if (i < 0) return program1[0] || program0[i]
+        if (i < program1.length) return program1[i]
+        i -= program1.length
+        return drums1[i] || drums0[i]
     }
 
     function nameToIndex(name) {
-        var ind = self.names.indexOf(name)
-        if (ind >= 0) return ind
-        name = name.toLowerCase()
-        for (var i = 0; i < self.names.length; i++) {
-            var loc = self.names[i].toLowerCase().indexOf(name)
-            if (loc >= 0) return i
+        var needle = name.toLowerCase()
+        for (var i = 0; i < lowered.length; i++) {
+            if (lowered[i].indexOf(needle) > -1) return i
         }
         return -1
     }
 
 }
+
+
+/*
+ * 
+ *      these MIDI programs from:
+ *      https://github.com/g200kg/webaudio-tinysynth
+ * 
+*/
+
 
 var instNames = [
     // 1-8 : Piano

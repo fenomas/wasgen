@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Audio test</title>
+	<style type="text/css">
+		html,
+		body {
+			height: 100%;
+			font: 300 18px "Helvetica Neue", Meiryo, Helvetica, sans-serif;
+			margin: 1rem 0.5rem;
+		}
+
+		button,
+		input {
+			margin: 0.5rem;
+			font: inherit;
+			font-size: 24px;
+		}
+
+		.column {
+			float: left;
+			margin: 1rem;
+		}
+
+		.item {
+			display: block;
+			margin: 0.8rem;
+		}
+
+		.item-inline {
+			display: inline-block;
+			margin: 0.8rem 0.5rem;
+		}
+
+		label {
+			cursor: pointer;
+			user-select: none;
+		}
+
+		select {
+			font: inherit;
+			font-size: 15px;
+		}
+
+		#redo {
+			font-size: 18px;
+			margin: 0.5rem;
+
+		}
+
+		#redoEffect {
+			font-size: 14px;
+		}
+
+		#play {
+			padding: 0.5rem;
+			width: 180px;
+		}
+
+		canvas {
+			display: block;
+			border: 1px solid gray;
+			width: 450px;
+			height: 200px;
+			user-select: none;
+		}
+
+		#vizLabel {
+			position: relative;
+			left: 30px;
+			top: -50px;
+			pointer-events: none;
+			user-select: none;
+		}
+
+		#progText {
+			width: 500px;
+			min-width: 450px;
+			height: 10rem;
+			font: 300 13px monospace;
+			white-space: nowrap;
+			overflow: auto;
+			resize: both;
+		}
+
+		#velnum {
+			width: 2rem;
+			font-size: 18px;
+			margin: 0;
+			text-align: center;
+		}
+
+		#benchmark {
+			position: relative;
+			left: 130px;
+			width: 180px;
+			font-size: 18px;
+			padding: 0.5rem;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div id="ui">
+		<div class="column">
+			<div class="item">
+				<button id="play">Play sound</button>
+				<label class="item-inline">
+					Velocity
+					<input type="range" id="vel" value="1" min="0.01" max="1" step="0.01">
+					<input type="text" id="velnum" value="1">
+				</label>
+			</div>
+			<div class="item">
+				<label>
+					Presets: <select id="presets"></select>
+				</label>
+				&nbsp; &nbsp;
+				<label>
+					Effects: <select id="effects">
+						<option></option>
+					</select>
+					<button id="redoEffect">↺</button>
+				</label>
+			</div>
+			<textarea id="progText" class="item"></textarea>
+			<div class="item" id="menus"></div>
+		</div>
+		<div class="column">
+			<label class="item-inline">
+				<input type="checkbox" id="compress" checked="true">Compress
+			</label>
+			<button id="benchmark">Benchmark</button>
+			<canvas class="item" id="viz"></canvas>
+			<label id="vizLabel">(click to toggle visualizer)</label>
+		</div>
+	</div>
+
+
+	<script src="bundle.js"></script>
+</body>
+
+</html>
