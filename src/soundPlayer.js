@@ -67,7 +67,6 @@ export default function SoundPlayer(ctx) {
         enforceMaxVoices(0) // hard-disposes all current notes
         currentNotes = null
         currentNoteIDs = null
-        clearInterval(pruneInterval)
     }
 
 
@@ -111,7 +110,6 @@ export default function SoundPlayer(ctx) {
             i--
         }
     }
-    var pruneInterval = setInterval(pruneEndedNotes, 700)
 
 
 
@@ -252,15 +250,16 @@ export default function SoundPlayer(ctx) {
 
 
     function disposeNote(note) {
-        var time = ctx.currentTime
         while (note.nodes.length > 0) {
             var node = note.nodes.pop()
-            node.disconnect()
-            if (node.gain) node.gain.cancelScheduledValues(time)
-            if (node.frequency) node.frequency.cancelScheduledValues(time)
-            if (node.playbackRate) node.playbackRate.cancelScheduledValues(time)
-            if (node.Q) node.Q.cancelScheduledValues(time)
             if (node.stop) node.stop()
+            if (node.buffer) node.buffer = null
+            if (node.gain) node.gain.cancelScheduledValues(0)
+            if (node.frequency) node.frequency.cancelScheduledValues(0)
+            if (node.playbackRate) node.playbackRate.cancelScheduledValues(0)
+            if (node.Q) node.Q.cancelScheduledValues(0)
+            node.disconnect()
+            node = null
         }
         note.nodes = null
         note.envelopes = null

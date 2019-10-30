@@ -124,7 +124,6 @@ function convertTinySynthProgram(name) {
         // bake in freq multiplier for signals targeting a frequency param
         if (p.g > 0 && p.g <= 10) {
             var tgt = Object.assign({}, defs, prog[p.g - 1])
-            console.log('hey', p.v, ' => ', p.v * tgt.t, 'unless', tgt.w)
             if (!/^n/.test(tgt.w)) p.v *= tgt.t
         }
         var ret = { type: p.w, freq: {}, gain: {} }
