@@ -23,6 +23,7 @@ export function createSource(context, type) {
     type = type.toLowerCase()
     var node
     if (type[0] === 'w') node = createWave(type)
+    if (type[0] === 'p') node = createPulse(type)
     if (type[0] === 'n') node = createNoise(type)
     if (!node) node = createOscillator(type)
     return node
@@ -57,6 +58,52 @@ var oscillatorTypes = {
     tr: 'triangle',
 }
 
+
+
+
+
+/*
+ * 
+ *      PULSES
+ * 
+ *      converts 'p25' into a 25% duty pulse wave, etc
+ *      ref: https://github.com/pendragon-andyh/WebAudio-PulseOscillator
+*/
+
+function createPulse(type) {
+    var duty = Math.round(parseInt(type.substr(1)) || 50)
+    duty = Math.min(Math.max(duty, 1), 99)
+    var osc = ctx.createOscillator()
+    osc.type = 'sawtooth'
+    var shaper = ctx.createWaveShaper()
+    shaper.curve = makePulseCurve(duty)
+    osc.connect(shaper)
+    // return a fake wrapper that looks like an oscillator
+    return {
+        start: t => osc.start(t),
+        frequency: osc.frequency,
+        connect: node => shaper.connect(node),
+        disconnect: () => {
+            // treat as dispose
+            shaper.disconnect()
+            osc.disconnect()
+            osc.stop()
+        },
+        input: osc,
+    }
+}
+
+function makePulseCurve(duty) {
+    var N = 256
+    if (curves[duty]) return curves[duty]
+    var curve = new Float32Array(N)
+    var cutoff = N * duty / 100
+    for (var i = 0; i < N; i++) {
+        curve[i] = (i < cutoff) ? 1 : -1
+    }
+    return curves[duty] = curve
+}
+var curves = {}
 
 
 

@@ -131,7 +131,7 @@ export default function SoundGen(audioContext, destination, noCompressor) {
         compressor = ctx.createDynamicsCompressor()
         compressor.threshold.value = -24    // -24
         compressor.knee.value = 25          // 30
-        compressor.ratio.value = 12         // 12
+        compressor.ratio.value = 20         // 12
         compressor.attack.value = 0.003     // 0.003
         compressor.release.value = 0.25     // 0.25
         compressor.connect(currDest)

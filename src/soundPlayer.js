@@ -51,8 +51,9 @@ export default function SoundPlayer(ctx) {
         if (note) releaseNote(note, time)
     }
 
+
     this.isPlaying = function (noteID) {
-        return !!currentNoteIDs[noteID]
+        return !!currentNotes[noteID]
     }
 
 
@@ -136,7 +137,7 @@ export default function SoundPlayer(ctx) {
 
 
     function Note(time) {
-        if (++_noteID > 255) _noteID = 1
+        if (++_noteID > 9999) _noteID = 1
         this.id = _noteID
         this.time = +time
         this.endTime = +0
@@ -244,7 +245,6 @@ export default function SoundPlayer(ctx) {
             endTime = Math.max(endTime, time + 8 * timeConst)
         })
         note.endTime = endTime
-
     }
 
 
