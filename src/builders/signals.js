@@ -24,7 +24,7 @@ export function buildSignal(ctx, note, program, freq, time, target, needsEnv) {
     // settings
     var filtType = checkFilterType(type)
     var usesGain = (filtType) ? filtType.usesGain : true
-    var usesFreq = (filtType) ? filtType.usesFreq : true
+    var usesFreq = (filtType) ? filtType.usesFreq : !isNoise(type)
     var usesQ = (filtType) ? filtType.usesQ : false
 
     if (filtType && target) {

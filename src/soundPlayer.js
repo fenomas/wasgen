@@ -1,5 +1,6 @@
 
 import { buildSignal } from './builders/signals'
+import Enveloper from 'param-enveloper'
 
 
 export default function SoundPlayer(ctx) {
@@ -14,7 +15,7 @@ export default function SoundPlayer(ctx) {
     var currentNotes = {}       // hash of note data objects keyed by id
     var currentNoteIDs = []     // array of ids, newest to oldest
 
-
+    var enveloper = new Enveloper(ctx)
 
 
 
@@ -68,6 +69,7 @@ export default function SoundPlayer(ctx) {
         enforceMaxVoices(0) // hard-disposes all current notes
         currentNotes = null
         currentNoteIDs = null
+        clearInterval(pruneInterval)
     }
 
 
@@ -113,6 +115,8 @@ export default function SoundPlayer(ctx) {
     }
 
 
+    // occasionally prune even if nothing's happening
+    var pruneInterval = setInterval(pruneEndedNotes, 800)
 
 
 
@@ -221,30 +225,24 @@ export default function SoundPlayer(ctx) {
 
     function releaseNote(note, time) {
         if (note.endTime > 0) return
-        var endTime = time
+        note.endTime = time
 
-        // note envelope data objs: { param, ramps, r, z }
-        note.envelopes.forEach(env => {
-            if (env.r < 0) return
+        // note envelope data objs: { param, release, ... }
+        note.envelopes.forEach((env, i) => {
+            var R = env.releaseTime
+            if (!(R >= 0)) return
             var param = env.param
-            param.cancelScheduledValues(time)
-            // check if release happens during any linear ramps
-            env.ramps.forEach(ramp => {
-                if (time < ramp.t0 || time > ramp.t1) return
-                // value at point where release should occur
-                var amt = (time - ramp.t0) / (ramp.t1 - ramp.t0)
-                var val = ramp.v0 + amt * (ramp.v1 - ramp.v0)
-                // reschedule the first part of the ramp
-                param.cancelScheduledValues(time)
-                param.linearRampToValueAtTime(val, time)
-            })
-            // schedule release
-            var target = env.z
-            var timeConst = env.r
-            param.setTargetAtTime(target, time, timeConst)
-            endTime = Math.max(endTime, time + 8 * timeConst)
+
+            enveloper.startEnvelope(param, time)
+            var tgt = env.releaseTarget || 0
+            enveloper.addSweep(param, -1, tgt, R)
+
+            if (env.rootEnvelope) {
+                // 4 timeConstants means ~2% of original value
+                var noteEnd = time + 4 * R
+                note.endTime = Math.max(note.endTime, noteEnd)
+            }
         })
-        note.endTime = endTime
     }
 
 

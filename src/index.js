@@ -1,4 +1,12 @@
 
+/*!
+ * soundgen: a web audio sound generator
+ * @url      github.com/andyhall/soundgen
+ * @author   Andy Hall <andy@fenomas.com>
+ * @license  ISC
+ */
+
+
 import SoundPlayer from './soundPlayer'
 
 
@@ -13,7 +21,7 @@ import SoundPlayer from './soundPlayer'
 
 export default function SoundGen(audioContext, destination, noCompressor) {
     var self = this
-
+    self.version = require('../package.json').version
 
     /*
      * 

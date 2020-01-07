@@ -1,5 +1,6 @@
 
 import { buildSignal } from './signals'
+import Enveloper from '../../../param-enveloper'
 
 var DEBUG = 0
 
@@ -13,92 +14,117 @@ var DEBUG = 0
  * 
 */
 
+
+var enveloper
+
 export function buildParam(ctx, param, note, freq, time, prog, type, target, needsEnv) {
     debug('start')
-    debug('PARAM: ', type, 'time', time, 'for prog', prog)
+    debug('PARAM: ', type, 'time', time, 'needsEnv=' + needsEnv, 'now', ctx.currentTime)
 
-    // info to track about this param and program
+    if (!enveloper) enveloper = new Enveloper(ctx)
+
+    // implicit starting value for parameter
+    var initValue = (type === 'freq') ? freq : 1
+    if (type === 'gain' && target === 'freq') initValue = freq
+
+    // info object that will carry through the process of scheduling param changes
     var info = {
-        needsEnvelope: needsEnv,
-        initializedValue: false,
-        appliedEnvelope: false,
-        envData: {
-            param: param,
-            ramps: [],
-            r: -1,
-            z: 0,
-        },
+        envStarted: false,
+        attackRampNeeded: !!needsEnv,
+        currValue: initValue,
+        startTime: time,
+        sweeping: false,
+        releaseTime: -1,
+        releaseTarget: +0,
     }
 
-    // special case for the chain of gain nodes leading to a top level source
-    // such params must have an implicit 0..N..0 envelope
-    if (info.needsEnvelope) {
-        debug('implicit t=0 value of 0')
-        param.setValueAtTime(0, 0)
-        info.initializedValue = true
-    }
-
-    // implied baseline value that programs affect
-    var baseValue = (type === 'freq') ? freq : 1
-    if (type === 'gain' && target === 'freq') baseValue = freq
-
-    // run through all program inputs
-    // applying each program to param, and maybe updating baseValue
+    // apply each program entry in turn, tracking state with info object
     var progs = (Array.isArray(prog)) ? prog : [prog]
+    if (progs.length === 0) progs.push({})
     progs.forEach(prog => {
         prog = conformProgram(prog, type)
         if (prog.type) {
-            // for source program, recurse to signal builder and exit
-            var signalNode = buildSignal(ctx, note, prog, freq, time, type, needsEnv)
+            // source programs recurse to the parent signal creator
+            var signalNode = buildSignal(ctx, note, prog, freq, time, type, false)
             signalNode.connect(param)
         } else {
-            // otherwise schedule values and track baseValue
-            baseValue = applyProgram(param, prog, info, freq, time, baseValue)
+            var cleanProg = conformProperties(prog)
+            applyProgram(param, cleanProg, info, freq)
         }
     })
 
-    // finish implicit envelope if none was applied otherwise
-    if (info.needsEnvelope && !info.appliedEnvelope) {
-        debug('- applying implicit envelope:')
-        var envProg = { a: defaultValues.a }
-        applyProgram(param, envProg, info, freq, time, baseValue)
+    // apply an attack ramp if one was needed and not applied
+    if (info.attackRampNeeded) {
+        debug('- default attack ramp:')
+        applyProgram(param, { a: defaultValues.a }, info, freq)
     }
 
-    // set a t=0 value if nothing else did so
-    if (!info.initializedValue) {
-        debug('- implicit t=0 value after program: ', baseValue)
-        param.setValueAtTime(baseValue, 0)
-        info.initializedValue = true
+    if (!info.envStarted) {
+        debug('- no schedules, init to:', info.currValue)
+        enveloper.initParam(param, info.currValue)
     }
 
-    // store param envelope info if necessary
-    var env = info.envData
-    if ((env.ramps.length > 0) || (env.r >= 0)) {
-        note.envelopes.push(env)
+    // set release sweep if needed and not already applied
+    if (needsEnv && info.releaseTime < 0) {
+        info.releaseTime = defaultValues.r
+    }
+
+    // store info to note that will be needed when it gets released
+    if (info.releaseTime >= 0) {
+        note.envelopes.push({
+            param: param,
+            releaseTime: info.releaseTime,
+            releaseTarget: info.releaseTarget,
+            rootEnvelope: !!needsEnv,
+        })
+        debug('- stored release:', info.releaseTime, 'target', info.releaseTarget)
     }
 
     // store base-level frequency params for later bending, maybe
     if (type === 'freq' && (!target || target === 'freq')) {
-        var mult = baseValue / freq
+        var mult = info.currValue / freq
         if (mult !== 0) note.bendables.push({ param, mult })
     }
 
     // done
-    info.envData = null
     info = null
     debug('end')
 }
 
-function isNum(v) { return !isNaN(v) }
+
+function isNum(v) { return (typeof v === 'number') }
 
 function conformProgram(prog, type) {
-    if (!isNaN(prog)) {
+    if (isNum(prog)) {
         if (type === 'freq') return { t: 0, f: prog }
         return { t: prog }
     }
     if (typeof prog !== 'object') return {}
-    return prog
+    return prog || {}
 }
+
+function conformProperties(prog) {
+    // modifiers
+    cachedPropsObj.w = (prog.w > 0) ? prog.w : 0
+    cachedPropsObj.t = (prog.t >= 0) ? prog.t : 1
+    cachedPropsObj.f = (prog.f > 0) ? prog.f : 0
+    cachedPropsObj.k = (prog.k > 0) ? prog.k : 0
+    // envelope
+    cachedPropsObj.a = (prog.a >= 0) ? prog.a : -1
+    cachedPropsObj.h = (prog.h > 0) ? prog.h : 0
+    cachedPropsObj.s = (prog.s >= 0) ? prog.s : defaultValues.s
+    cachedPropsObj.d = (prog.d >= 0) ? prog.d : -1
+    cachedPropsObj.r = (prog.r >= 0) ? prog.r : -1
+    cachedPropsObj.z = (prog.z > 0) ? prog.z : -1
+    // aliases just override default props
+    if (prog.p >= 0) cachedPropsObj.s = prog.p
+    if (prog.q >= 0) cachedPropsObj.d = prog.q
+    return cachedPropsObj
+}
+var cachedPropsObj = {}
+
+
+
 
 
 
@@ -110,94 +136,80 @@ function conformProgram(prog, type) {
 
 /*
  * 
+ * 
  *      apply a single program element to a param
+ * 
  * 
 */
 
 
+function applyProgram(param, prog, info, freq) {
 
-function applyProgram(param, prog, info, freq, time, baseValue) {
+    // peak value (target of ramp if there is one)
+    var peak = info.currValue || 1
+    if (prog.t >= 0) peak *= prog.t
+    peak += prog.f || 0
+    if (prog.k) peak *= Math.pow(freq / 261.625, prog.k)
 
-    // otherwise treat program as a collection of numeric values
-    var props = Object.assign({}, defaultValues, prog)
-    time += props.w
-    var localValue = baseValue * props.t + props.f
-    if (props.k !== 0) localValue *= Math.pow(freq / 261.625, props.k)
+    // determine what kinds of scheduling will be done for this program
+    var wait = (prog.w > 0)
+    var ramp = (prog.a >= 0)
+    var hold = (prog.h > 0)
+    var sweep = (prog.d >= 0)
 
-    // sweep-like program - anything with a 'p'
-    var sweepLike = (props.p !== 1)
-    if (sweepLike) {
-        if (!info.initializedValue) {
-            param.setValueAtTime(localValue, 0)
-            debug('- sweep init', localValue, 'time=0')
-            info.initializedValue = true
-        }
-        var target = localValue * props.p
-        param.setTargetAtTime(target, time, props.q)
-        debug('- sweep target', localValue, 'time', time)
+    // ramp is implied if needed and anything would come afterwards
+    if (info.attackRampNeeded && (hold || sweep)) ramp = true
+
+    // start envelope if we haven't
+    var anything = wait || ramp || hold || sweep
+    if (anything && !info.envStarted) {
+        var initVal = (ramp) ? info.currValue : peak
+        if (info.attackRampNeeded) initVal = 0
+        enveloper.initParam(param, initVal)
+        enveloper.startEnvelope(param, info.startTime)
+        info.envStarted = true
+        debug('- initted param:', initVal, 'time', info.startTime)
     }
 
-    // env-like program
-    var envLike = isNum(prog.a) || isNum(prog.d) || isNum(prog.s) || isNum(prog.r) || isNum(prog.h)
-    if (envLike) {
-        debug('- starting env, base', baseValue, 'local', localValue)
-
-        // envelopes assumed to start from 0
-        var start = 0
-        var peak = localValue
-
-        // init if nothing else has already
-        if (!info.initializedValue) {
-            param.setValueAtTime(start, 0)
-            info.initializedValue = true
-            debug('- env t=0 value: ', start)
-        }
-
-        // attack
-        if (start !== peak) {
-            var t0 = time
-            var t1 = time + Math.max(props.a, 0.003)
-            param.setValueAtTime(start, t0)
-            param.linearRampToValueAtTime(peak, t1)
-            debug('- env ramp: ', start, 'to', peak, 'times', t0, 'to', t1)
-            // store ramp info
-            info.envData.ramps.push({
-                v0: start,
-                v1: peak,
-                t0: t0,
-                t1: t1,
-            })
-            time = t1
-            localValue = peak
-        }
-
-        // hold and decay
-        if (props.s !== 1) {
-            time += props.h
-            var sustain = peak * props.s
-            param.setTargetAtTime(sustain, time, props.d)
-            debug('- env decay to', sustain, 'time', time)
-        }
-
-        // store release value only if explicitly in the program
-        // or if note requires one (due to being part of gain chain to output)
-        if (info.needsEnvelope || isNum(prog.r)) {
-            info.envData.r = props.r
-            // program can optionally set an explict release target
-            if (isNum(prog.z)) info.envData.z = prog.z
-            debug('- env stored release val', props.r)
-        }
-
-        info.appliedEnvelope = true
+    if (wait) {
+        addHold(info, param, prog.w)
+        debug('- wait for', prog.w)
     }
 
-
-    if (!(sweepLike || envLike)) {
-        debug('- prog with no params applied, val => ', localValue)
+    if (ramp) {
+        if (info.sweeping) addHold(info, param, 0)
+        var a = (prog.a >= 0) ? prog.a : defaultValues.a
+        enveloper.addRamp(param, a, peak)
+        info.attackRampNeeded = false
+        debug('- linear ramp to', peak, 'over', a)
     }
 
-    return localValue
+    if (hold) {
+        addHold(info, param, prog.h)
+        debug('- wait for', prog.h)
+    }
+
+    if (sweep) {
+        peak *= prog.s
+        var d = (prog.d > 0) ? prog.d : defaultValues.d
+        enveloper.addSweep(param, -1, peak, d)
+        debug('- open sweep to', peak, 'const', d)
+    }
+
+    // store the value for next program
+    info.currValue = peak
+
+    // remember release values if specified
+    if (prog.r >= 0) info.releaseTime = prog.r
+    if (prog.z >= 0) info.releaseTarget = info.currValue * prog.z
 }
+
+function addHold(info, param, duration) {
+    enveloper.addHold(param, duration || 0)
+    info.sweeping = false
+}
+
+
 
 
 
@@ -217,21 +229,30 @@ function applyProgram(param, prog, info, freq, time, baseValue) {
 var defaultValues = {
     // common
     w: 0,           // delay before start
-    t: 1,           // multiplier for start/peak
-    f: 0,           // add to start/peak
+    t: 1,           // multiplier for param value
+    f: 0,           // added to param value
     k: 0,           // vol keying
-
-    // sweep
-    p: 1,           // sweep to peak *= p
-    q: 0.1,         // time constant of sweep
 
     // envelope
     a: 0.05,        // env attack
     h: 0.0,         // env hold
     d: 0.1,         // env delay
-    s: 0.8,         // env sustain
+    s: 0.5,         // env sustain
     r: 0.1,         // env release
+    z: -1,          // env release target
+
+    // aliases
+    // p -> same as s
+    // q -> same as d
 }
+
+
+
+
+
+
+
+
 
 
 

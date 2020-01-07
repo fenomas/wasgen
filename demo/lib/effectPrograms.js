@@ -15,15 +15,17 @@ export var effectPrograms = {
         var freq = [
             { t: 0.5, p: 2, q: rand(0.4, 0.6) },
         ]
+        var sweepLen = freq[0].q
         if (select(0, 1)) {
-            var w = rand(0.05, 0.25)
-            freq.push({ w: w, p: 1.5, q: 0.001 })
-            freq.push({ w: w + 0.02, p: 2, q: rand(0.2, 0.6) })
+            var w = rand(0.05, 0.15)
+            freq.push({ w: w, t: 0.5, a: 0.01 })
+            freq.push({ p: 2, q: rand(0.2, 0.5) })
+            sweepLen += freq[2].q
         }
         return [{
             type,
             freq,
-            gain: { t: t, a: 0.01, d: 0.7, s: 0, r: 0.2 }
+            gain: { t: t, a: 0.01, d: sweepLen / 2, s: 0, r: 0.15 }
         }]
     },
 
@@ -31,15 +33,15 @@ export var effectPrograms = {
 
     coin: function () {
         var freq = [
-            { w: rand(0.05, 0.15), p: rand(1.1, 1.5), q: 0.01 },
+            { w: rand(0.05, 0.1), p: rand(1.1, 1.5), q: 0.01 },
         ]
         if (select(0, 1)) freq.push({
-            w: rand(0.05, 0.25), p: rand(0.7, 1.5), q: 0.01,
+            w: rand(0.05, 0.1), p: rand(1.1, 1.2), q: 0.01,
         })
         return [{
             type: select('square', 'triangle', 'w9999', 'saw'),
             freq,
-            gain: { t: 0.5, a: 0.01, d: 0.7, s: 0, r: 0.2 }
+            gain: { t: 0.5, a: 0.01, s: 0, d: 0.5, r: 0.1 }
         }]
     },
 
@@ -47,19 +49,24 @@ export var effectPrograms = {
 
     laser: function () {
         var freq = []
-        if (select(0, 1)) freq.push(
-            { p: select(0.5, 0.75, 0.8), q: rand(0.25, 0.5), }
-        )
+        if (select(0, 1)) freq.push({
+            w: rand(0, 0.2),
+            p: select(0.5, 0.75, 0.8),
+            q: rand(0.25, 0.5),
+        })
         // tremolo
         freq.push({
             type: 'sine',
-            freq: { t: 0, f: rand(5, 30), p: rand(1, 2), q: 0.5 },
-            gain: rand(0.1, 0.3),
+            freq: [
+                rand(5, 20),
+                { p: rand(1, 2), q: 0.5 }
+            ],
+            gain: rand(0.05, 0.3),
         })
         return [{
             type: select('triangle', 'sine', 'w999', 'w99999'),
             freq,
-            gain: { t: 0.5, a: 0.01, d: 0.7, s: 0, r: 0.2 }
+            gain: { t: 0.5, a: 0.01, d: 0.3, s: 0, r: 0.15 }
         }]
     },
 
@@ -74,7 +81,7 @@ export var effectPrograms = {
                 {
                     type: 'sine',
                     freq: { t: 0, f: rand(10, 30), p: rand(1, 4), q: rand(0.2, 0.6) },
-                    gain: { t: 0.3, a: 0, h: 0, d: 0.3, s: 0, r: 0.2 },
+                    gain: { t: 0.1, d: 0.5, s: 0, r: 0.2 },
                 }
             ]
         }, {

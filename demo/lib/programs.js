@@ -56,6 +56,11 @@ redoEffect.addEventListener('click', ev => setProgram({ target: effectsPD }))
 
 // intial state - presets [0]
 currentProgram = convertTinySynthProgram(instruments.names[0])
+// currentProgram = [{
+//     type: 'sine',
+//     freq: { r: 1, z: 0.5 },
+//     gain: { a: 1, h: 1, d: 1, s: 0.2, r: 1 },
+// }]
 programStr = programToString(currentProgram)
 
 
@@ -99,6 +104,8 @@ textEl.addEventListener('input', ev => {
  *      convert programs from tinysynth format
  * 
 */
+// {w: "sine", v: 0.2, d: 1, r: 1}
+// 1: {w: "sine", v: 11, t: 3.5, d: 1, r: 1, …}
 
 function convertTinySynthProgram(name) {
     var prog = instruments.getProg(name)
@@ -131,6 +138,7 @@ function convertTinySynthProgram(name) {
         apply(p, ret.gain, gain1, gain2)
         if (ret.freq.q && !ret.freq.p) delete ret.freq.q
         if (p.g > 0) ret.g = p.g
+        if (p.g === 0 && ret.gain.a === 0) ret.gain.a = 0.005
         return ret
     })
     // rejigger targeted programs
