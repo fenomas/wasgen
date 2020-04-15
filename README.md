@@ -22,8 +22,9 @@ npm install --save soundgen
 
 To hack on this locally, clone the repo and do `npm i`, 
 then use the `npm` scripts to run or build the local demo.
-If you don't have webpack installed globally, you'll also need to do 
-`npm i -D webpack webpack-cli webpack-dev-server` or similar.
+If you don't have webpack installed globally, you'll also need to 
+install `webpack webpack-cli webpack-dev-server` as dev dependencies,
+or set up your own build via your preferred bundler/etc.
 
 
 
@@ -70,19 +71,23 @@ property and optional `freq`, `gain`, and/or `Q` parameters:
 gen.play([
     { type: 'sine' },
     { type: 'sawtooth', gain:0.5 },
-    { type: 'lowpass', freq:1000, Q:2 },
+    { type: 'lowpass', freq:1000, Q:()=>rand(1,5) },
 ])
 ```
 
 Parameter (`freq`, `gain`, `Q`) values can be any of the following:
  * omitted
- * a number literal
- * an object whose properties are all number literals 
- (used to apply sweeps or envelopes)
- * an audio source (like an oscillator or noise function)
+ * a number literal, or a function that returns one
+ * an object with number literal properties, defining a 
+   sweep or an envelope (see below)
+ * an audio source (like an oscillator or noise signal)
  * an array of any of the previous
 
-For example:
+Note that audio sources can have parameters which are audio sources,
+for creating effects like vibrato and tremolo. 
+Signal programs can nest that way to arbitrary depth.
+
+Examples:
 
 ```js
 // applying sweep or envelope object to a parameter
@@ -90,7 +95,7 @@ gen.play([
     { type: 'sine',                 // base waveform
       freq: { p:2, q:0.5 },         // sweeps frequency x => 2x
       gain: { a:0.01, d:0.2,        // standard AHDSR envelope
-              s:0.3, r:0.05 }, 
+              h:0.1, s:0.3, r:0.05 }, 
     },
 ])
 
@@ -100,10 +105,21 @@ gen.play([
       freq: [
           { p:2, q:0.5 },           // sweep
           { type: 'sine',           // LFO oscillator
-            freq: 5, gain: 0.1 },   // params for LFO
+            freq: 5,                // freq of LFO
+            gain: 0.1               // gain of LFO
+          }
       ],
     },
 ])
+
+// randomized properties - note here that freq.t gets randomized once,
+// while gain.t would gets randomized each time the program is played
+var rand = (a, b) => a + (b - a) * Math.random()
+var prog = [{
+    freq: rand(500,1000),
+    gain: ()=>rand(0, 2),
+}]
+gen.play(prog)
 ```
 
 Supported values for each object's `type` property:

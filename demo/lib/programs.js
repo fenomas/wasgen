@@ -174,16 +174,17 @@ function convertTinySynthProgram(name) {
 */
 
 function stringToProgram(str) {
-    var parsed
     // naively strip comments
-    while (str.indexOf('//') > -1) {
-        var p1 = str.indexOf('//')
-        var p2 = str.indexOf('\n', p1)
-        str = str.substr(0, p1) + str.substr(p2)
-    }
-    str = str.replace(/\/\/(.*)\n/g, '$1')
+    str = str.split('\n').filter(line => {
+        return !(/^\s*\/\//.test(line))
+    }).join(' ')
+
+    // for hacky demo convenience:
+    // eval together with a `rand(a,b)` function
+    var rand = (a, b) => Math.min(a, b) + Math.abs(b - a) * Math.random()
+    var parsed
     try {
-        eval('parsed = ' + str.split('\n').join(' '))
+        parsed = eval(`var rand = ${rand};  ${str}`)
     } catch (e) { }
     var okay = parsed && parsed.length && parsed[0]
     if (okay) parsed.forEach(o => okay = okay && (typeof o === 'object'))

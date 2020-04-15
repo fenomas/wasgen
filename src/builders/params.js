@@ -95,6 +95,7 @@ export function buildParam(ctx, param, note, freq, time, prog, type, target, nee
 function isNum(v) { return (typeof v === 'number') }
 
 function conformProgram(prog, type) {
+    if (typeof prog === 'function') prog = prog()
     if (isNum(prog)) {
         if (type === 'freq') return { t: 0, f: prog }
         return { t: prog }
@@ -104,26 +105,33 @@ function conformProgram(prog, type) {
 }
 
 function conformProperties(prog) {
-    // modifiers
-    cachedPropsObj.w = (prog.w > 0) ? prog.w : 0
-    cachedPropsObj.t = (prog.t >= 0) ? prog.t : 1
-    cachedPropsObj.f = (prog.f > 0) ? prog.f : 0
-    cachedPropsObj.k = (prog.k > 0) ? prog.k : 0
-    // envelope
-    cachedPropsObj.a = (prog.a >= 0) ? prog.a : -1
-    cachedPropsObj.h = (prog.h > 0) ? prog.h : 0
-    cachedPropsObj.s = (prog.s >= 0) ? prog.s : defaultValues.s
-    cachedPropsObj.d = (prog.d >= 0) ? prog.d : -1
-    cachedPropsObj.r = (prog.r >= 0) ? prog.r : -1
-    cachedPropsObj.z = (prog.z > 0) ? prog.z : -1
+    // baseline conform - take prog value if >= 0
+    conformSingleProp(cachedPropsObj, prog, 'w', 0)
+    conformSingleProp(cachedPropsObj, prog, 't', 1)
+    conformSingleProp(cachedPropsObj, prog, 'f', 0)
+    conformSingleProp(cachedPropsObj, prog, 'k', 0)
+    // same for envelope values
+    conformSingleProp(cachedPropsObj, prog, 'a', -1)
+    conformSingleProp(cachedPropsObj, prog, 'h', 0)
+    conformSingleProp(cachedPropsObj, prog, 's', defaultValues.s)
+    conformSingleProp(cachedPropsObj, prog, 'd', -1)
+    conformSingleProp(cachedPropsObj, prog, 'r', -1)
+    conformSingleProp(cachedPropsObj, prog, 'z', -1)
     // aliases just override default props
-    if (prog.p >= 0) cachedPropsObj.s = prog.p
-    if (prog.q >= 0) cachedPropsObj.d = prog.q
+    conformSingleProp(cachedPropsObj, prog, 'p', -1)
+    conformSingleProp(cachedPropsObj, prog, 'q', -1)
+    if (cachedPropsObj.p >= 0) cachedPropsObj.s = cachedPropsObj.p
+    if (cachedPropsObj.q >= 0) cachedPropsObj.d = cachedPropsObj.q
+
     return cachedPropsObj
 }
 var cachedPropsObj = {}
 
-
+function conformSingleProp(tgt, src, prop, def) {
+    var val = src[prop]
+    if (typeof val === 'function') val = val()
+    tgt[prop] = (val >= 0) ? val : def
+}
 
 
 
