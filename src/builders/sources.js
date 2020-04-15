@@ -149,6 +149,7 @@ var periodicWaves = {}
  *      values are:
  *          'n0'  white (default)
  *          'np'  pink
+ *          'nb'  brown
  *          'n1'  metallic
  * 
 */
@@ -156,6 +157,7 @@ var periodicWaves = {}
 function createNoise(type) {
     var src = ctx.createBufferSource()
     var noiseType = 'n0'
+    if (/b/.test(type)) noiseType = 'nb'
     if (/p/.test(type)) noiseType = 'np'
     if (/1/.test(type)) noiseType = 'n1'
     if (!noiseBuffers[noiseType]) {
@@ -174,12 +176,14 @@ function createNoiseBuffer(type) {
     var noiseLen = {
         n0: 1,
         n1: 1.5,
-        np: 2,
+        nb: 1.5,
+        np: 1.5,
     }[type] // seconds
     var blen = (noiseLen * ctx.sampleRate) | 0
     var buffer = ctx.createBuffer(1, blen, ctx.sampleRate)
     var data = buffer.getChannelData(0)
     if (type === 'n0') makeWhiteNoise(data)
+    if (type === 'nb') makeBrownNoise(data)
     if (type === 'np') makePinkNoise(data)
     if (type === 'n1') makeMetallicNoise(data)
     return buffer
@@ -192,31 +196,53 @@ function makeWhiteNoise(data) {
 }
 
 function makePinkNoise(data) {
-    // from: http://www.musicdsp.org/files/pink.txt
-    // not sure if this is actual pink noise...
-    var b0 = 0, b1 = 0, b2 = 0
+    // Paul Kellet's algorithm, from:
+    // http://www.firstpr.com.au/dsp/pink-noise/
+    var b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0
+    var max = 0
+    data.forEach((v, i) => {
+        var white = 2 * Math.random() - 1
+        b0 = 0.99886 * b0 + white * 0.0555179
+        b1 = 0.99332 * b1 + white * 0.0750759
+        b2 = 0.96900 * b2 + white * 0.1538520
+        b3 = 0.86650 * b3 + white * 0.3104856
+        b4 = 0.55000 * b4 + white * 0.5329522
+        b5 = -0.7616 * b5 - white * 0.0168980
+        data[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362
+        b6 = white * 0.115926
+        max = Math.max(max, Math.abs(data[i]))
+    })
+    data.forEach((v, i) => { data[i] /= max })
+}
+
+function makeBrownNoise(data) {
+    var a = 0, max = 0
     for (var i = 0; i < data.length; i++) {
         var white = 2 * Math.random() - 1
-        b0 = 0.99765 * b0 + white * 0.0990460
-        b1 = 0.96300 * b1 + white * 0.2965164
-        b2 = 0.57000 * b2 + white * 1.0526913
-        data[i] = b0 + b1 + b2 + white * 0.1848
+        a = (a + white * 0.02) / 1.02
+        max = Math.max(max, Math.abs(a))
+        data[i] = a
     }
+    data.forEach((v, i) => { data[i] /= max })
 }
 
 function makeMetallicNoise(data) {
     // pseudorandom harmonics of 440hz
     var n = hash(1)
+    var max = 0
     for (var j = 0; j < 24; j++) {
         n = hash(n)
         var a = 1 + (j % 16)
         var b = 2 + (n * 10)
-        addHarmonics(data, a, b, 1 / 4)
+        var peak = addHarmonics(data, a, b, 1 / 4)
+        max = Math.max(max, peak)
     }
     fastSin = null // done with this now
+    data.forEach((v, i) => { data[i] /= max })
 }
 
 var addHarmonics = (data, r1, r2, scale) => {
+    var max = 0
     var posScale = 2 * Math.PI * 440 / ctx.sampleRate
     var phase1 = Math.random() * 2 * Math.PI
     var phase2 = Math.random() * 2 * Math.PI
@@ -225,7 +251,9 @@ var addHarmonics = (data, r1, r2, scale) => {
         var a = fastSin(phase1 + r1 * pos)
         var b = fastSin(phase2 + r2 * pos)
         data[i] += a * b * scale
+        max = Math.max(max, Math.abs(data[i]))
     }
+    return max
 }
 
 function hash(n) {

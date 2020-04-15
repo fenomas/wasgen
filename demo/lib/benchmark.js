@@ -26,7 +26,7 @@ document.querySelector('#benchmark').addEventListener('click', ev => {
     for (var i = 0; i < N; i++) {
 
         var carrier = {
-            type: select('sine', 'sq', 'tri', 'w99', 'w999', 'n0', 'n1', 'np'),
+            type: select('sine', 'sq', 'tri', 'w99', 'w999', 'n0', 'n1', 'np', 'nb'),
             freq: [],
             gain: [],
         }

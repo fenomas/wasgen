@@ -24,7 +24,7 @@ export function buildSignal(ctx, note, program, freq, time, target, needsEnv) {
     // settings
     var filtType = checkFilterType(type)
     var usesGain = (filtType) ? filtType.usesGain : true
-    var usesFreq = (filtType) ? filtType.usesFreq : !isNoise(type)
+    var usesFreq = (filtType) ? filtType.usesFreq : true
     var usesQ = (filtType) ? filtType.usesQ : false
 
     if (filtType && target) {
@@ -41,7 +41,8 @@ export function buildSignal(ctx, note, program, freq, time, target, needsEnv) {
     // set up the three param types
     if (usesFreq) {
         var param = node.frequency || node.playbackRate
-        buildParam(ctx, param, note, freq, time, program.freq, 'freq', target, false)
+        var useFreq = (node.playbackRate) ? freq / 440 : freq
+        buildParam(ctx, param, note, useFreq, time, program.freq, 'freq', target, false)
     }
 
     if (usesQ) {

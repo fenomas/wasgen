@@ -125,7 +125,7 @@ gen.play(prog)
 Supported values for each object's `type` property:
  * `sine`, `square`, `sawtooth`, `triangle` - standard web audio oscillators
  * `lowpass`, `notch`, etc. - standard web audio filters
- * `n0`, `np`, `n1` - noise (white, pink, and metallic, respectively)
+ * `n0`, `np`, `nb`, `n1` - noise (white, pink, brown, metallic, respectively)
  * `p25`, `p40`, etc. - pulse waves (`p40` means a 40% duty cycle)
  * `w99`, `w90603`, etc. - a periodic wave with imaginary components scaled per the numbers - that is, `w909` would mix the 1st and 3rd harmonics
 
