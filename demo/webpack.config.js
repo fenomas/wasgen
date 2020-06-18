@@ -12,12 +12,7 @@ module.exports = (env) => ({
     })(),
 
     entry: entryPath,
-    // resolve: {},
-    // performance: {
-    //     // default size warnings
-    //     maxEntrypointSize: 1.5e6,
-    //     maxAssetSize: 1.5e6,
-    // },
+
     output: {
         path: buildPath,
         filename: 'bundle.js',

@@ -18,23 +18,23 @@ audioDestination.connect(ctx.destination)
 
 /*
  * 
- *      init soundgen, handle HMR
+ *      init wasgen, handle HMR
  *  
 */
 
-import SoundGen from '../..'
+import Generator from '../..'
 var noCompressor = false
-var gen = new SoundGen(ctx, audioDestination, noCompressor)
+var gen = new Generator(ctx, audioDestination, noCompressor)
 window.gen = gen
 
 function rebuildGen() {
     if (gen) gen.dispose()
-    gen = new SoundGen(ctx, audioDestination, noCompressor)
+    gen = new Generator(ctx, audioDestination, noCompressor)
     window.gen = gen
 }
 
 if (module.hot) module.hot.accept('..', () => {
-    SoundGen = require('../..')
+    Generator = require('../..')
     rebuildGen()
 })
 

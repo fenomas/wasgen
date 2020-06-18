@@ -1,7 +1,7 @@
 
 /*!
- * soundgen: a web audio sound generator
- * @url      github.com/andyhall/soundgen
+ * wasgen: a web audio sound generator
+ * @url      github.com/andyhall/wasgen
  * @author   Andy Hall <andy@fenomas.com>
  * @license  ISC
  */
@@ -13,13 +13,13 @@ import SoundPlayer from './soundPlayer'
 
 /*
  *
- *      SOUNDGEN
+ *      WASGEN
  *  
  *      Root module just exposes the API and conforms inputs
  * 
 */
 
-export default function SoundGen(audioContext, destination, noCompressor) {
+export default function Generator(audioContext, destination, noCompressor) {
     var self = this
     self.version = require('../package.json').version
 

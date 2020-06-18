@@ -1,6 +1,7 @@
 
 
 import { createFilter, checkFilterType } from './filters'
+import { createShaper, checkShaperType } from './shapers'
 import { createSource, isNoise } from './sources'
 import { buildParam } from './params'
 
@@ -22,19 +23,31 @@ export function buildSignal(ctx, note, program, freq, time, target, needsEnv) {
     var type = program.type
 
     // settings
-    var filtType = checkFilterType(type)
-    var usesGain = (filtType) ? filtType.usesGain : true
-    var usesFreq = (filtType) ? filtType.usesFreq : true
-    var usesQ = (filtType) ? filtType.usesQ : false
+    var usesGain = true
+    var usesFreq = true
+    var usesQ = false
 
-    if (filtType && target) {
-        throw 'Filters only allowed at root level of program'
+    var isShaper = checkShaperType(type)
+    if (isShaper) {
+        usesGain = false
+        usesFreq = false
+        usesQ = false
+        if (target) throw 'Shapers must be at root level of program'
+    }
+
+    var filtType = checkFilterType(type)
+    if (filtType) {
+        usesGain = filtType.usesGain
+        usesFreq = filtType.usesFreq
+        usesQ = filtType.usesQ
+        if (target) throw 'Filters must be at root level of program'
     }
 
     // create and start base node and store in note data
-    var node = (filtType) ?
-        createFilter(ctx, type) :
-        createSource(ctx, type)
+    var node = (filtType) ? createFilter(ctx, type) :
+        (isShaper) ? createShaper(ctx, type) :
+            createSource(ctx, type)
+
     if (node.start) node.start(time)
     note.nodes.push(node)
 
