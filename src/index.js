@@ -19,9 +19,11 @@ import SoundPlayer from './soundPlayer'
  * 
 */
 
-export default function Generator(audioContext, destination, noCompressor) {
+export default function Generator(audioContext, destination, noCompressor, silent) {
     var self = this
     self.version = require('../package.json').version
+    if (!silent) console.log(`wasgen     v${self.version}`)
+
 
     /*
      * 
