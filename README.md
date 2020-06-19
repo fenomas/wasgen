@@ -80,7 +80,7 @@ For the full specification details:
 
 ## By
 
-Made with 🍺 by [Andy Hall](https://twitter.com/fenomas).
+Made with 🍺 by [Andy Hall](https://fenomas.com).
 
 License is ISC.
 
