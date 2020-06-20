@@ -31,7 +31,8 @@ export default function Generator(audioContext, destination, noCompressor, silen
      * 
     */
 
-    var ctx = audioContext || new AudioContext()
+    var ctx = audioContext ||
+        new (window.AudioContext || window.webkitAudioContext)()
     var player = new SoundPlayer(ctx)
 
     var checkContext = () => { if (ctx.state !== 'running') ctx.resume() }

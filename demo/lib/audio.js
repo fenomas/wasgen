@@ -6,7 +6,7 @@
  * 
 */
 
-export var ctx = new AudioContext()
+export var ctx = new (window.AudioContext || window.webkitAudioContext)()
 export var audioDestination = ctx.createGain()
 
 audioDestination.connect(ctx.destination)
