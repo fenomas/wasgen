@@ -2,6 +2,7 @@
 
 import { createFilter, checkFilterType } from './filters'
 import { createShaper, checkShaperType } from './shapers'
+import { createCrusher, checkCrusherType } from './crusher'
 import { createSource, isNoise } from './sources'
 import { buildParam } from './params'
 
@@ -28,7 +29,8 @@ export function buildSignal(ctx, note, program, freq, time, target, needsEnv) {
     var usesQ = false
 
     var isShaper = checkShaperType(type)
-    if (isShaper) {
+    var isCrusher = checkCrusherType(type)
+    if (isShaper || isCrusher) {
         usesGain = false
         usesFreq = false
         usesQ = false
@@ -46,7 +48,8 @@ export function buildSignal(ctx, note, program, freq, time, target, needsEnv) {
     // create and start base node and store in note data
     var node = (filtType) ? createFilter(ctx, type) :
         (isShaper) ? createShaper(ctx, type) :
-            createSource(ctx, type)
+            (isCrusher) ? createCrusher(ctx, type) :
+                createSource(ctx, type)
 
     if (node.start) node.start(time)
     note.nodes.push(node)

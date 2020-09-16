@@ -19,7 +19,8 @@ export function createShaper(ctx, type) {
     // distortion type
     var arr = type.split('-')
     var curveType = arr[1]
-    var numArg = parseInt(arr[2]) || 5
+    var numArg = parseFloat(arr[2])
+    if (typeof numArg !== 'number') numArg = 5
     if (!curveCreators[curveType]) {
         console.warn('unknown curve type: ' + curveType)
         curveType = 'linear'
@@ -75,15 +76,63 @@ curveCreators.fold = (num) => {
 
 
 curveCreators.crush = (num) => {
-    var steps = num * 2
+    var steps = num 
+    steps = clamp(1, steps, 40)
     var N = 255
     var arr = new Float32Array(N)
     for (var i = 0; i < N; i++) {
-        var x = i / (N - 1)
-        var v = Math.round(x * steps) / steps
-        arr[i] = -1 + 2 * v
+        var x = -1 + 2 * (i / (N - 1))
+        arr[i] = Math.round(x * steps) / steps
     }
     return arr
+}
+
+
+
+curveCreators.thin = (num) => {
+    var pow = 1 + num
+    pow = clamp(1.5, pow, 20)
+    console.log('made', pow)
+    var N = 255
+    var arr = new Float32Array(N)
+    for (var i = 0; i < N; i++) {
+        var x = -1 + 2 * i / (N - 1)
+        if (x > 0) {
+            arr[i] = mix(0, 1, x, pow)
+        } else {
+            arr[i] = mix(0, -1, -x, pow)
+        }
+    }
+    return arr
+}
+
+
+
+curveCreators.fat = (num) => {
+    var pow = 1 - num / 9
+    pow = clamp(0.05, pow, 0.95)
+    var N = 255
+    var arr = new Float32Array(N)
+    for (var i = 0; i < N; i++) {
+        var x = -1 + 2 * i / (N - 1)
+        if (x > 0) {
+            arr[i] = mix(0, 1, x, pow)
+        } else {
+            arr[i] = mix(0, -1, -x, pow)
+        }
+    }
+    return arr
+}
+
+
+
+
+function mix(a, b, t, pow) {
+    return a + (b - a) * Math.pow(t, pow)
+}
+
+function clamp(min, val, max) {
+    return (val < min) ? min : (val > max) ? max : val
 }
 
 

@@ -175,9 +175,9 @@ function convertTinySynthProgram(name) {
 
 function stringToProgram(str) {
     // naively strip comments
-    str = str.split('\n').filter(line => {
-        return !(/^\s*\/\//.test(line))
-    }).join(' ')
+    str = str.split('\n').map(line => {
+        return line.replace(/\/\/.*/, '')
+    }).join('\n')
 
     // for hacky demo convenience:
     // eval together with a `rand(a,b)` function

@@ -168,7 +168,7 @@ export default function SoundPlayer(ctx) {
             // top level node, will either be a source or a filter
             var signalProg = program[i]
             var node = buildSignal(ctx, note, signalProg, freq, time, '', true)
-            if (node.Q || node.curve) {
+            if (node.Q || node.curve || node.isWorklet) {
                 // insert a new filter into output chain
                 currDest.connect(node)
                 currDest = ctx.createGain()

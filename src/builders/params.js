@@ -1,6 +1,8 @@
 
 import { buildSignal } from './signals'
+// import Enveloper from 'param-enveloper'
 import Enveloper from '../../../param-enveloper'
+
 
 var DEBUG = 0
 
@@ -29,6 +31,7 @@ export function buildParam(ctx, param, note, freq, time, prog, type, target, nee
 
     // info object that will carry through the process of scheduling param changes
     var info = {
+        type: type,
         envStarted: false,
         attackRampNeeded: !!needsEnv,
         currValue: initValue,
@@ -56,7 +59,8 @@ export function buildParam(ctx, param, note, freq, time, prog, type, target, nee
     // apply an attack ramp if one was needed and not applied
     if (info.attackRampNeeded) {
         debug('- default attack ramp:')
-        applyProgram(param, { a: defaultValues.a }, info, freq)
+        var rampProg = conformProperties({ a: defaultValues.a })
+        applyProgram(param, rampProg, info, freq)
     }
 
     if (!info.envStarted) {
@@ -105,24 +109,22 @@ function conformProgram(prog, type) {
 }
 
 function conformProperties(prog) {
-    // baseline conform - take prog value if >= 0
+    // apply all defined properties to a reused cache object
     conformSingleProp(cachedPropsObj, prog, 'w', 0)
     conformSingleProp(cachedPropsObj, prog, 't', 1)
     conformSingleProp(cachedPropsObj, prog, 'f', 0)
     conformSingleProp(cachedPropsObj, prog, 'k', 0)
     // same for envelope values
     conformSingleProp(cachedPropsObj, prog, 'a', -1)
-    conformSingleProp(cachedPropsObj, prog, 'h', 0)
-    conformSingleProp(cachedPropsObj, prog, 's', defaultValues.s)
+    conformSingleProp(cachedPropsObj, prog, 'h', -1)
+    conformSingleProp(cachedPropsObj, prog, 's', 1)
     conformSingleProp(cachedPropsObj, prog, 'd', -1)
     conformSingleProp(cachedPropsObj, prog, 'r', -1)
     conformSingleProp(cachedPropsObj, prog, 'z', -1)
-    // aliases just override default props
-    conformSingleProp(cachedPropsObj, prog, 'p', -1)
-    conformSingleProp(cachedPropsObj, prog, 'q', -1)
-    if (cachedPropsObj.p >= 0) cachedPropsObj.s = cachedPropsObj.p
-    if (cachedPropsObj.q >= 0) cachedPropsObj.d = cachedPropsObj.q
-
+    conformSingleProp(cachedPropsObj, prog, 'x', -1)
+    // p/q aliases just override s/d props
+    if (isNum(prog.p)) cachedPropsObj.s = prog.p
+    if (isNum(prog.q)) cachedPropsObj.d = prog.q
     return cachedPropsObj
 }
 var cachedPropsObj = {}
@@ -130,7 +132,7 @@ var cachedPropsObj = {}
 function conformSingleProp(tgt, src, prop, def) {
     var val = src[prop]
     if (typeof val === 'function') val = val()
-    tgt[prop] = (val >= 0) ? val : def
+    tgt[prop] = (isNum(val)) ? val : def
 }
 
 
@@ -153,59 +155,91 @@ function conformSingleProp(tgt, src, prop, def) {
 
 function applyProgram(param, prog, info, freq) {
 
-    // peak value (target of ramp if there is one)
-    var peak = info.currValue || 1
-    if (prog.t >= 0) peak *= prog.t
-    peak += prog.f || 0
-    if (prog.k) peak *= Math.pow(freq / 261.625, prog.k)
-
     // determine what kinds of scheduling will be done for this program
     var wait = (prog.w > 0)
     var ramp = (prog.a >= 0)
     var hold = (prog.h > 0)
-    var sweep = (prog.d >= 0)
+    var sweep = (prog.s !== 1)
+    var repeats = Math.max(prog.x | 0, 1)
+    var volKey = (prog.k) ? Math.pow(freq / 261.625, prog.k) : 1
 
-    // ramp is implied if needed and anything would come afterwards
-    if (info.attackRampNeeded && (hold || sweep)) ramp = true
-
-    // start envelope if we haven't
-    var anything = wait || ramp || hold || sweep
-    if (anything && !info.envStarted) {
-        var initVal = (ramp) ? info.currValue : peak
-        if (info.attackRampNeeded) initVal = 0
-        enveloper.initParam(param, initVal)
-        enveloper.startEnvelope(param, info.startTime)
-        info.envStarted = true
-        debug('- initted param:', initVal, 'time', info.startTime)
+    // force a non-zero ramp if it's needed and anything would come afterwards
+    if (info.attackRampNeeded && (hold || sweep)) {
+        ramp = true
+        if (prog.a <= 0) prog.a = defaultValues.a
     }
 
-    if (wait) {
-        addHold(info, param, prog.w)
-        debug('- wait for', prog.w)
-    }
+    // baseline starting value of the param
+    var paramVal = info.currValue || 1
+    paramVal *= volKey
 
-    if (ramp) {
-        if (info.sweeping) addHold(info, param, 0)
-        var a = (prog.a >= 0) ? prog.a : defaultValues.a
-        enveloper.addRamp(param, a, peak)
-        info.attackRampNeeded = false
-        debug('- linear ramp to', peak, 'over', a)
-    }
+    // repeats can't function without a wait value
+    if (!wait) repeats = 1
 
-    if (hold) {
-        addHold(info, param, prog.h)
-        debug('- wait for', prog.h)
-    }
+    // // initialize the param's envelope if we haven't already
+    // var base = info.currValue
 
-    if (sweep) {
-        peak *= prog.s
-        var d = (prog.d > 0) ? prog.d : defaultValues.d
-        enveloper.addSweep(param, -1, peak, d)
-        debug('- open sweep to', peak, 'const', d)
+    // var anything = wait || ramp || hold || sweep
+    // if (anything && !info.envStarted) {
+    //     var initVal = (ramp) ? info.currValue : peak
+    //     if (info.attackRampNeeded) initVal = 0
+    //     enveloper.initParam(param, initVal)
+    //     enveloper.startEnvelope(param, info.startTime)
+    //     info.envStarted = true
+    //     debug('- initted param:', initVal, 'time', info.startTime)
+    // }
+
+
+    // add all the necessary events, possibly multiple times
+    var paramTime = info.startTime
+
+    for (var i = 0; i < repeats; i++) {
+
+        if (wait) {
+            initEnvIfNeeded(info, param, paramVal)
+            addHold(info, param, prog.w)
+            paramTime += prog.w
+            debug('- wait for', prog.w)
+        }
+
+        // update param value
+        if (i > 0) paramVal = enveloper.getValueAtTime(param, paramTime)
+        paramVal = paramVal * prog.t + prog.f
+
+        // ad-hoc special case - make low/falling frequencies reflect around 50hz 
+        if (info.type === 'freq' && paramVal < 50 && prog.f < 0) {
+            paramVal = 100 - paramVal
+            prog.f = -prog.f
+        }
+
+        if (ramp) {
+            initEnvIfNeeded(info, param, paramVal)
+            if (info.sweeping) addHold(info, param, 0)
+            enveloper.addRamp(param, prog.a, paramVal)
+            info.attackRampNeeded = false
+            paramTime += prog.a || 0
+            debug('- linear ramp to', paramVal, 'over', prog.a)
+        }
+
+        if (hold) {
+            initEnvIfNeeded(info, param, paramVal)
+            addHold(info, param, prog.h)
+            paramTime += prog.h || 0
+            debug('- wait for', prog.h)
+        }
+
+        if (sweep) {
+            initEnvIfNeeded(info, param, paramVal)
+            paramVal *= prog.s
+            var d = (prog.d > 0) ? prog.d : defaultValues.d
+            enveloper.addSweep(param, -1, paramVal, d)
+            info.sweeping = true
+            debug('- open sweep to', paramVal, 'const', d)
+        }
     }
 
     // store the value for next program
-    info.currValue = peak
+    info.currValue = paramVal
 
     // remember release values if specified
     if (prog.r >= 0) info.releaseTime = prog.r
@@ -217,6 +251,21 @@ function addHold(info, param, duration) {
     info.sweeping = false
 }
 
+function initEnvIfNeeded(info, param, initialValue) {
+    if (info.envStarted) return
+
+    // if (anything && !info.envStarted) {
+    //     var initVal = (ramp) ? info.currValue : peak
+
+    if (info.attackRampNeeded) initialValue = 0
+    enveloper.initParam(param, initialValue)
+    enveloper.startEnvelope(param, info.startTime)
+    info.envStarted = true
+    debug('- initted param:', initialValue, 'time', info.startTime)
+
+    // }
+
+}
 
 
 
@@ -245,9 +294,10 @@ var defaultValues = {
     a: 0.05,        // env attack
     h: 0.0,         // env hold
     d: 0.1,         // env delay
-    s: 0.5,         // env sustain
+    s: 1,           // env sustain
     r: 0.1,         // env release
     z: -1,          // env release target
+    x: 1,           // # of times to repeatedly apply the envelope
 
     // aliases
     // p -> same as s

@@ -117,6 +117,8 @@ Effects:
  * `shape-fold-5` - wave-shaper distortion
  * `shape-boost-5` - wave-shaper distortion
  * `shape-crush-5` - wave-shaper distortion
+ * `shape-thin-5` - wave-shaper distortion
+ * `shape-fat-5` - wave-shaper distortion
 
 For wave shaper effects, the `5` shown above is a tunable parameter. 
 Try numbers generally in the `1..10` range for different amounts of distortion.
@@ -128,7 +130,7 @@ Try numbers generally in the `1..10` range for different amounts of distortion.
 ## 5. Parameter envelope objects
 
 Parameter sweeps or envelopes are defined with an object 
-containing *only number literal properties*. 
+containing *only number literal properties*, or functions that return them. 
 
 Here are all the supported properties, and their default values:
 
@@ -143,17 +145,18 @@ var paramObjectdefaults = {
                     // higher/lower input frequencies
 
     // envelope values:
-    w: 0,           // delay before the envelope starts
+    w: 0,           // wait time before the envelope starts
     a: 0.05,        // attack (linear ramp to peak value)
     h: 0.0,         // hold (wait duration between attack and decay)
     s: 0.8,         // sustain (multiplier for peak value)
     d: 0.1,         // delay (time constant for sweep to sustain level)
     r: 0.1,         // release (time constant of sweep when note is released)
     z: 0,           // release target (value to sweep to when note is released)
+    x: 1,           // times to repeat the envelope (only makes sense when w>0)
 
     // sweep values:
-    p: 0.8,         // alias for 's'
-    q: 0.1,         // alias for 'd'
+    p: 0.8,         // alias for 's' - effectively a peak value multiplier
+    q: 0.1,         // alias for 'd' - time constant for the sweep
 }
 ```
 
