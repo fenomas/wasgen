@@ -1,7 +1,7 @@
 
 import { buildSignal } from './signals'
-// import Enveloper from 'param-enveloper'
-import Enveloper from '../../../param-enveloper'
+import Enveloper from 'param-enveloper'
+// import Enveloper from '../../../param-enveloper'
 
 
 var DEBUG = 0
@@ -176,20 +176,6 @@ function applyProgram(param, prog, info, freq) {
     // repeats can't function without a wait value
     if (!wait) repeats = 1
 
-    // // initialize the param's envelope if we haven't already
-    // var base = info.currValue
-
-    // var anything = wait || ramp || hold || sweep
-    // if (anything && !info.envStarted) {
-    //     var initVal = (ramp) ? info.currValue : peak
-    //     if (info.attackRampNeeded) initVal = 0
-    //     enveloper.initParam(param, initVal)
-    //     enveloper.startEnvelope(param, info.startTime)
-    //     info.envStarted = true
-    //     debug('- initted param:', initVal, 'time', info.startTime)
-    // }
-
-
     // add all the necessary events, possibly multiple times
     var paramTime = info.startTime
 
@@ -253,18 +239,11 @@ function addHold(info, param, duration) {
 
 function initEnvIfNeeded(info, param, initialValue) {
     if (info.envStarted) return
-
-    // if (anything && !info.envStarted) {
-    //     var initVal = (ramp) ? info.currValue : peak
-
     if (info.attackRampNeeded) initialValue = 0
     enveloper.initParam(param, initialValue)
     enveloper.startEnvelope(param, info.startTime)
     info.envStarted = true
     debug('- initted param:', initialValue, 'time', info.startTime)
-
-    // }
-
 }
 
 
