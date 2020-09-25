@@ -156,16 +156,19 @@ var periodicWaves = {}
 
 function createNoise(type) {
     var src = ctx.createBufferSource()
-    var noiseType = 'n0'
-    if (/b/.test(type)) noiseType = 'nb'
-    if (/p/.test(type)) noiseType = 'np'
-    if (/1/.test(type)) noiseType = 'n1'
+    var noiseType = noiseTypes[type] || 'n0'
     if (!noiseBuffers[noiseType]) {
         noiseBuffers[noiseType] = createNoiseBuffer(noiseType)
     }
     src.buffer = noiseBuffers[noiseType]
     src.loop = true
     return src
+}
+var noiseTypes = {
+    n0: 'n0',
+    n1: 'n1',
+    np: 'np',
+    nb: 'nb',
 }
 var noiseBuffers = {}
 
@@ -237,9 +240,15 @@ function makeMetallicNoise(data) {
         var peak = addHarmonics(data, a, b, 1 / 4)
         max = Math.max(max, peak)
     }
-    fastSin = null // done with this now
     data.forEach((v, i) => { data[i] /= max })
 }
+
+
+
+
+
+
+// helpers
 
 var addHarmonics = (data, r1, r2, scale) => {
     var max = 0

@@ -8,7 +8,6 @@
 
 
 import SoundPlayer from './soundPlayer'
-// import { initializeWorklet } from './builders/crusher'
 
 
 
@@ -41,8 +40,6 @@ export default function Generator(audioContext, destination, noCompressor, silen
     var currDest = destination || ctx.destination
 
 
-    // disabling this - it seems to work no better than waveshaping
-    // initializeWorklet(ctx)
 
 
 

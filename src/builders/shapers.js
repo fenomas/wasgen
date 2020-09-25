@@ -75,14 +75,14 @@ curveCreators.fold = (num) => {
 }
 
 
-curveCreators.crush = (num) => {
-    var steps = num 
-    steps = clamp(1, steps, 40)
+curveCreators.crush = (depth) => {
+    depth = clamp(1, depth, 40)
+    var steps = depth / 2
     var N = 255
     var arr = new Float32Array(N)
     for (var i = 0; i < N; i++) {
         var x = -1 + 2 * (i / (N - 1))
-        arr[i] = Math.round(x * steps) / steps
+        arr[i] = Math.round((x + 1) * steps) / steps - 1
     }
     return arr
 }

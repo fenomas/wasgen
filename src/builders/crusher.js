@@ -1,5 +1,5 @@
 /*
-      {type:'crush-5'}
+      {type:'sine', crush:5}
 */
 import { createShaper } from './shapers'
 
@@ -15,21 +15,18 @@ export function initializeWorklet(ctx) {
     })
 }
 
-export function checkCrusherType(type) {
-    return (/^crush/i.test(type))
-}
-
-export function createCrusher(ctx, type) {
+export function createCrusher(ctx, depth, freq) {
     initializeWorklet(ctx)
 
-    var numArg = parseInt(type.split('-')[1])
-    if (!numArg) numArg = 5
+    depth = (depth | 0) || 5
+    freq = +freq || 0.2
+
     // fallback if no worklets
-    if (!supported) return createShaper(ctx, `shape-crush-${numArg}`)
+    if (!supported) return createShaper(ctx, `shape-crush-${depth}`)
 
     var node = new AudioWorkletNode(ctx, moduleName)
-    node.parameters.get('depth').value = numArg
-    node.parameters.get('freq').value = 0.15
+    node.parameters.get('depth').value = depth
+    node.parameters.get('freq').value = freq
     node.isWorklet = true
     return node
 }
@@ -43,7 +40,7 @@ export function createCrusher(ctx, type) {
  * 
  * 
  *              Bitcrusher audio worklet!
- *              Worklet code is from:
+ *              Worklet code is sorta from:
  * https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/Using_AudioWorklet
  * 
  * 
@@ -60,27 +57,32 @@ class BitcrushProcessor extends Object {
     static get parameterDescriptors() {
         return [
             { name: 'depth', defaultValue: 5, minValue: 1, maxValue: 20 },
-            { name: 'freq', defaultValue: 0.5, minValue: 0, maxValue: 1 },
+            { name: 'freq', defaultValue: 0.2, minValue: 0.01, maxValue: 1 },
         ]
     }
     process(inputs, outputs, parameters) {
         var input = inputs[0]
         var output = outputs[0]
-        var steps = parameters.depth[0]
+        var steps = parameters.depth[0] / 2
         var freq = parameters.freq[0]
+        var invsteps = 1 / steps
+        var phase = this.phase
+        var sample = this.sample
 
         for (var i = 0; i < input.length; i++) {
             var channelIn = input[i]
             var channelOut = output[i]
             for (var j = 0; j < channelIn.length; j++) {
-                this.phase += freq
-                if (this.phase >= 1) {
-                    this.phase -= 1
-                    this.sample = Math.round(channelIn[j] * steps) / steps
+                phase += freq
+                if (phase >= 1) {
+                    phase -= 1
+                    sample = Math.round((channelIn[j] + 1) * steps) * invsteps - 1
                 }
-                channelOut[j] = this.sample
+                channelOut[j] = sample
             }
         }
+        this.phase = phase
+        this.sample = sample
         return true
     }
 }

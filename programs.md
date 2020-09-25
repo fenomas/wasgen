@@ -103,25 +103,37 @@ Top-level program objects either represent **audio sources**
 or **effects**. The following `type` properties are 
 supported for each kind of object:
 
-Audio sources:
+**Audio sources:**
 
  * `sine`, `square`, `sawtooth`, `triangle` - standard web audio oscillators
  * `n0`, `np`, `nb`, `n1` - noise (white, pink, brown, metallic, respectively)
  * `p25`, `p40`, etc. - pulse waves (`p15` would mean a 15% duty cycle)
  * `w99`, `w90603`, etc. - periodic wave, where the affixed number defines the imaginary components (i.e. `w909` would mix the 1st and 3rd harmonics)
 
-Effects:
+**Effects:**
 
  * `lowpass`, `notch`, `bandpass`, etc. - all standard web audio filters
  * `shape-clip-5` - wave-shaper distortion
  * `shape-fold-5` - wave-shaper distortion
  * `shape-boost-5` - wave-shaper distortion
- * `shape-crush-5` - wave-shaper distortion
  * `shape-thin-5` - wave-shaper distortion
  * `shape-fat-5` - wave-shaper distortion
 
 For wave shaper effects, the `5` shown above is a tunable parameter. 
 Try numbers generally in the `1..10` range for different amounts of distortion.
+
+
+**Bit crushing:**
+
+Audio source objects can have one additional parameter `crush`, 
+which must be a static integer. This causes a bit-crusher effect to be 
+added to the source. Use a lower number for more distortion.
+
+```js
+  gen.play([{ type: 'sine', crush:5 }])
+```
+
+
 
 
 <br>

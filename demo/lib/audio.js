@@ -58,7 +58,17 @@ export function startNote(note) {
     if (ctx.state !== 'running') ctx.resume()
     if (noteIDs[note]) return
     var freq = noteToFreq(note)
-    noteIDs[note] = gen.play(currentProgram, freq, velocity)
+    // support case where text field has array of programs, for demoing...
+    if (Array.isArray(currentProgram[0])) {
+        var now = gen.now()
+        noteIDs[note] = currentProgram.map(prog => {
+            var delay = prog[0].delay || 0
+            return gen.play(prog, freq, velocity, now + delay)
+        })
+    } else {
+        // normal case
+        noteIDs[note] = gen.play(currentProgram, freq, velocity)
+    }
 }
 
 export function bendNote(originalNote, toNote) {
@@ -68,7 +78,13 @@ export function bendNote(originalNote, toNote) {
 
 export function releaseNote(note, time) {
     if (time < 1) time = gen.now() + time
-    gen.release(noteIDs[note], time)
+    if (Array.isArray(noteIDs[note])) {
+        noteIDs[note].forEach(id => {
+            gen.release(id, time)
+        })
+    } else {
+        gen.release(noteIDs[note], time)
+    }
     noteIDs[note] = null
 }
 

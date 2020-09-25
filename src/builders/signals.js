@@ -2,9 +2,9 @@
 
 import { createFilter, checkFilterType } from './filters'
 import { createShaper, checkShaperType } from './shapers'
-import { createCrusher, checkCrusherType } from './crusher'
-import { createSource, isNoise } from './sources'
+import { createSource } from './sources'
 import { buildParam } from './params'
+import { createCrusher } from './crusher'
 
 
 
@@ -21,7 +21,7 @@ import { buildParam } from './params'
 
 export function buildSignal(ctx, note, program, freq, time, target, needsEnv) {
     program = conformSignalProgram(program)
-    var type = program.type
+    var type = program.type || ''
 
     // settings
     var usesGain = true
@@ -29,8 +29,7 @@ export function buildSignal(ctx, note, program, freq, time, target, needsEnv) {
     var usesQ = false
 
     var isShaper = checkShaperType(type)
-    var isCrusher = checkCrusherType(type)
-    if (isShaper || isCrusher) {
+    if (isShaper) {
         usesGain = false
         usesFreq = false
         usesQ = false
@@ -48,8 +47,7 @@ export function buildSignal(ctx, note, program, freq, time, target, needsEnv) {
     // create and start base node and store in note data
     var node = (filtType) ? createFilter(ctx, type) :
         (isShaper) ? createShaper(ctx, type) :
-            (isCrusher) ? createCrusher(ctx, type) :
-                createSource(ctx, type)
+            createSource(ctx, type)
 
     if (node.start) node.start(time)
     note.nodes.push(node)
@@ -63,6 +61,13 @@ export function buildSignal(ctx, note, program, freq, time, target, needsEnv) {
 
     if (usesQ) {
         buildParam(ctx, node.Q, note, freq, time, program.Q, 'Q', target, false)
+    }
+
+    if (program.crush > 0) {
+        var crusher = createCrusher(ctx, program.crush, program.crushFreq)
+        note.nodes.push(crusher)
+        node.connect(crusher)
+        node = crusher
     }
 
     if (usesGain) {
@@ -83,9 +88,8 @@ export function buildSignal(ctx, note, program, freq, time, target, needsEnv) {
 
 
 function conformSignalProgram(input) {
-    var prog = (typeof input === 'object') ? input : {}
-    if (!prog.type) prog.type = ''
-    return prog
+    if (typeof input !== 'object') return { type: '' }
+    return input
 }
 
 
