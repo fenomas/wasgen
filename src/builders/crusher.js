@@ -3,13 +3,14 @@
 */
 import { createShaper } from './shapers'
 
-var supported = false
+var supported = false, tried = false
 var moduleName = 'bit-crusher'
 
 
 
 export function initializeWorklet(ctx) {
-    if (supported) return
+    if (tried || supported) return
+    tried = true
     importWorkletModule(ctx, moduleName).then(res => {
         if (res) supported = true
     })
@@ -103,7 +104,9 @@ async function importWorkletModule(ctx, moduleName) {
     var moduleStr = BitcrushProcessor.toString()
     // look away if you don't like dirty hacks
     moduleStr = moduleStr.replace('extends Object', 'extends AudioWorkletProcessor')
-    moduleStr += `; registerProcessor('${moduleName}', BitcrushProcessor)`
+    // class name may be minified
+    var className = /class (.+) extends/.exec(moduleStr)[1]
+    moduleStr += `; registerProcessor('${moduleName}', ${className})`
     try {
         await ctx.resume()
         var blob = new Blob([moduleStr], { type: 'application/javascript' })

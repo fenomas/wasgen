@@ -8,6 +8,7 @@
 
 
 import SoundPlayer from './soundPlayer'
+import { initializeWorklet } from './builders/crusher'
 
 
 
@@ -35,10 +36,12 @@ export default function Generator(audioContext, destination, noCompressor, silen
         new (window.AudioContext || window.webkitAudioContext)()
     var player = new SoundPlayer(ctx)
 
-    var checkContext = () => { if (ctx.state !== 'running') ctx.resume() }
+    var checkContext = () => {
+        if (ctx.state !== 'running') ctx.resume()
+        initializeWorklet(ctx)
+    }
 
     var currDest = destination || ctx.destination
-
 
 
 
