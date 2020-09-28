@@ -92,7 +92,6 @@ curveCreators.crush = (depth) => {
 curveCreators.thin = (num) => {
     var pow = 1 + num
     pow = clamp(1.5, pow, 20)
-    console.log('made', pow)
     var N = 255
     var arr = new Float32Array(N)
     for (var i = 0; i < N; i++) {

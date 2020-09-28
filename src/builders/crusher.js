@@ -3,16 +3,15 @@
 */
 import { createShaper } from './shapers'
 
-var supported = false, tried = false
 var moduleName = 'bit-crusher'
 
 
 
 export function initializeWorklet(ctx) {
-    if (tried || supported) return
-    tried = true
+    if (ctx.WASGEN_BITCRUSH_WORKLET) return
+    ctx.WASGEN_BITCRUSH_WORKLET = 'trying'
     importWorkletModule(ctx, moduleName).then(res => {
-        if (res) supported = true
+        ctx.WASGEN_BITCRUSH_WORKLET = (res) ? 'ok' : 'ng'
     })
 }
 
@@ -23,7 +22,9 @@ export function createCrusher(ctx, depth, freq) {
     freq = +freq || 0.2
 
     // fallback if no worklets
-    if (!supported) return createShaper(ctx, `shape-crush-${depth}`)
+    if (ctx.WASGEN_BITCRUSH_WORKLET !== 'ok') {
+        return createShaper(ctx, `shape-crush-${depth}`)
+    }
 
     var node = new AudioWorkletNode(ctx, moduleName)
     node.parameters.get('depth').value = depth
