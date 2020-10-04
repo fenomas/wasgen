@@ -123,8 +123,9 @@ function conformProperties(prog) {
     conformSingleProp(cachedPropsObj, prog, 'z', -1)
     conformSingleProp(cachedPropsObj, prog, 'x', -1)
     // aliases: dr = d,r
-    if (isNum(prog.dr)) {
-        cachedPropsObj.d = cachedPropsObj.r = prog.dr
+    conformSingleProp(cachedPropsObj, prog, 'dr', -1)
+    if (isNum(cachedPropsObj.dr)) {
+        cachedPropsObj.d = cachedPropsObj.r = cachedPropsObj.dr
     }
     // p/q aliases just override s/d props
     if (isNum(prog.p)) cachedPropsObj.s = prog.p
