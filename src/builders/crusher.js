@@ -1,37 +1,66 @@
-/*
-      {type:'sine', crush:5}
-*/
+
 import { createShaper } from './shapers'
+import { getCache } from '../lib/contextCache'
 
-var moduleName = 'bit-crusher'
+var MODULE_NAME = 'bit-crusher'
+
+
+/*
+ * 
+ * 
+ *      Creates a bit-crusher audio worklet
+ *  
+ *      * unfortunately complicated, because Worklets
+ *      * returns a wave shaper if worklets aren't supported
+ * 
+ *      expects program like: { type: 'crush-4' }
+ *      can specify freq param: { type: 'crush-4-0.4' }
+ * 
+ * 
+*/
 
 
 
-export function initializeWorklet(ctx) {
-    if (ctx.WASGEN_BITCRUSH_WORKLET) return
-    ctx.WASGEN_BITCRUSH_WORKLET = 'trying'
-    importWorkletModule(ctx, moduleName).then(res => {
-        ctx.WASGEN_BITCRUSH_WORKLET = (res) ? 'ok' : 'ng'
-    })
+export function isCrusher(type) {
+    return (/^crush/i.test(type))
 }
 
-export function createCrusher(ctx, depth, freq) {
+
+export function createCrusher(ctx, type) {
     initializeWorklet(ctx)
 
-    depth = (depth | 0) || 5
-    freq = +freq || 0.2
+    // params
+    var arr = type.split('-')
+    var depth = parseInt(arr[1])
+    var freq = parseFloat(arr[2]) || 0.2
+    if (depth === 0) depth = 1
+    if (!depth) depth = 5
 
     // fallback if no worklets
-    if (ctx.WASGEN_BITCRUSH_WORKLET !== 'ok') {
+    var data = getCache(ctx)
+    if (data.crush_worklet_state !== 'ok') {
         return createShaper(ctx, `shape-crush-${depth}`)
     }
 
-    var node = new AudioWorkletNode(ctx, moduleName)
+    var node = new AudioWorkletNode(ctx, MODULE_NAME)
     node.parameters.get('depth').value = depth
     node.parameters.get('freq').value = freq
+    window.MY_AUDIO_WORKLET = node
     node.isWorklet = true
     return node
 }
+
+
+// logic to init the AudioWorklet module, only once!
+export function initializeWorklet(ctx) {
+    var data = getCache(ctx)
+    if (data.crush_worklet_state) return
+    data.crush_worklet_state = 'trying'
+    importWorkletModule(ctx, MODULE_NAME).then(res => {
+        data.crush_worklet_state = (res) ? 'ok' : 'ng'
+    })
+}
+
 
 
 

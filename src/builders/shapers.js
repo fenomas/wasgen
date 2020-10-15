@@ -2,13 +2,13 @@
 
 /*
  * 
- *      Creates wave-shaper node for distortion
+ *      Creates a web audio node for wave-shaper distortion
  * 
 */
 
 
 // tells whether given type corresponds to a shaper node
-export function checkShaperType(type) {
+export function isShaper(type) {
     return (/^shape/i.test(type))
 }
 

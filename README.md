@@ -2,16 +2,27 @@
 
 ----
 
-Declarative low-level **W**eb **A**udio **s**ound **gen**erator.  
-You pass in a static object describing the oscillators, filters, 
-and parameters you want, and this library constructs all the nodes, 
-connects everything, applies the envelopes and sweeps, 
-and cleans up afterwards.
+Declarative low-level **W**eb **A**udio **S**ound **Gen**erator. 
+
+You pass in a static object, which defines an arbitrarily complex 
+audio graph and its parameters. 
+This library will then construct all the nodes, connect everything, 
+apply the necessary parameters and envelopes, and clean up afterwards.
 
 [Live demo](https://andyhall.github.io/wasgen/) ← open that and hit keys to play sounds.
 
+<br>
 
-## Install
+> NOTE!  
+> Are you reasonably familiar with terms like "FM synthesis" and 
+> "ADSR envelope"? If not, you may find 
+> [`wafxr`](https://andyhall.github.io/wafxr) more useful than 
+> this library.
+
+
+<br>
+
+## Usage:
 
 Install as a dependency:
 
@@ -19,38 +30,27 @@ Install as a dependency:
 npm install --save wasgen
 ```
 
-To hack on this locally, clone the repo and do `npm i`, 
-then use the `npm` scripts to run or build the local demo.
-If you don't have webpack installed globally, you'll also need to 
-install `webpack webpack-cli webpack-dev-server` as dev dependencies,
-or set up your own build via your preferred bundler/etc.
-
-
-
-## Usage:
+Instantiate and invoke:
 
 ```js
 var Generator = require('wasgen')
 
-var ctx = new AudioContext
-var dest = ctx.destination // optional
-var gen = new Generator(ctx, dest)
+var ctx = new AudioContext()
+var gen = new Generator(ctx, ctx.destination) // both args optional
 
-var program = [{
-    type: 'sine', gain: { a: 0.1, d: 0.1, s: 0.5, r: 0.1 }
-}]     // see below
-var freq = 440          // in Hz
-var velocity = 1        // 0..1
+var program = { type:'sine' }   // see below
+var freq = 440                  // in Hz
+var velocity = 1                // 0..1
 
-// synchronous use:
-var time = gen.now() + 0.1
-var releaseTime = time + 1
-gen.play(program, freq, velocity, time, releaseTime)
+// fixed-duration sounds:
+var startTime = gen.now() + 0.1
+var releaseTime = startTime + 1
+gen.play(program, freq, velocity, startTime, releaseTime)
 
-// asynchronous use:
-var noteID = gen.play(program, freq, velocity)
+// dynamic sounds:
+var noteID = gen.play(program, freq, velocity, startTime)
 setInterval(() => {
-    gen.release(noteID) 
+    gen.release(noteID)   // sound's release envelope starts when this is called
 }, 1000)
 ```
 
@@ -59,18 +59,26 @@ And so on. See source for other APIs
 
 ## Program Format
 
-`wasgen` programs are arrays of objects in an ad-hoc format, which is 
+Sound programs for `wasgen` use an ad-hoc format that's 
 easy to read but hard to describe. You may find it easiest to 
 open the [demo page](https://andyhall.github.io/wasgen/) and 
 browse the examples to get the general idea.
 
-For the full specification details:
+For the full details:
 
-> ### [Program format tutorial](programs.md)
+> ## [Program format spec](programs.md)
 
+
+<br>
+
+----
 
 ## Recent updates
 
+ * `0.16.0`
+   * simplifies program format, and many internals
+ * `0.12.0`
+   * adds bit-crushing, bug fixes
  * `0.10.0`
    * adds waveshaper distortion effects
    * rewrites most documentation

@@ -1,8 +1,12 @@
 
+import { getCache } from '../lib/contextCache'
+
 
 /*
  * 
- *      Creates web audio nodes needed for a source signal
+ * 
+ *      Creates bare WebAudio nodes that deliver a source signal
+ * 
  * 
 */
 
@@ -10,22 +14,14 @@ export function isNoise(type) {
     return (/^n/i.test(type))
 }
 
-var ctx
-
-export function createSource(context, type) {
-    if (ctx !== context) {
-        ctx = context
-        // clear cached buffers etc.
-        periodicWaves = {}
-        noiseBuffers = {}
-    }
+export function createSourceNode(ctx, type) {
     // disamiguates type and defers to implementations below
     type = type.toLowerCase()
     var node
-    if (type[0] === 'w') node = createWave(type)
-    if (type[0] === 'p') node = createPulse(type)
-    if (type[0] === 'n') node = createNoise(type)
-    if (!node) node = createOscillator(type)
+    if (type[0] === 'w') node = createWave(ctx, type)
+    if (type[0] === 'p') node = createPulse(ctx, type)
+    if (type[0] === 'n') node = createNoise(ctx, type)
+    if (!node) node = createOscillator(ctx, type)
     return node
 }
 
@@ -44,7 +40,7 @@ export function createSource(context, type) {
 */
 
 
-function createOscillator(type) {
+function createOscillator(ctx, type) {
     var osc = ctx.createOscillator()
     osc.type = (type[0] === 't') ? 'triangle' :
         oscillatorTypes[type.substr(0, 2)] || 'sine'
@@ -70,7 +66,7 @@ var oscillatorTypes = {
  *      ref: https://github.com/pendragon-andyh/WebAudio-PulseOscillator
 */
 
-function createPulse(type) {
+function createPulse(ctx, type) {
     var duty = Math.round(parseInt(type.substr(1)) || 50)
     duty = Math.min(Math.max(duty, 1), 99)
     var osc = ctx.createOscillator()
@@ -116,26 +112,29 @@ var curves = {}
  * 
 */
 
-function createWave(type) {
+function createWave(ctx, type) {
     var osc = ctx.createOscillator()
     if (type.length < 2) type += '9'
-    osc.setPeriodicWave(getPeriodicWave(type))
+    osc.setPeriodicWave(getPeriodicWave(ctx, type))
     return osc
 }
 
-function getPeriodicWave(name) {
-    if (!periodicWaves[name]) {
+function getPeriodicWave(ctx, name) {
+    var data = getCache(ctx)
+    if (!data.periodicWaves) data.periodicWaves = {}
+    var cachedWaves = data.periodicWaves
+
+    if (!cachedWaves[name]) {
         var imag = new Float32Array(name.length)
         var real = new Float32Array(name.length)
         for (var i = 1; i < name.length; ++i) {
             var num = parseFloat(name[i]) / 9
             imag[i] = num * num
         }
-        periodicWaves[name] = ctx.createPeriodicWave(real, imag)
+        cachedWaves[name] = ctx.createPeriodicWave(real, imag)
     }
-    return periodicWaves[name]
+    return cachedWaves[name]
 }
-var periodicWaves = {}
 
 
 
@@ -154,13 +153,17 @@ var periodicWaves = {}
  * 
 */
 
-function createNoise(type) {
+function createNoise(ctx, type) {
+    var data = getCache(ctx)
+    if (!data.noiseBuffers) data.noiseBuffers = {}
+    var cachedNoise = data.noiseBuffers
+
     var src = ctx.createBufferSource()
     var noiseType = noiseTypes[type] || 'n0'
-    if (!noiseBuffers[noiseType]) {
-        noiseBuffers[noiseType] = createNoiseBuffer(noiseType)
+    if (!cachedNoise[noiseType]) {
+        cachedNoise[noiseType] = createNoiseBuffer(ctx, noiseType)
     }
-    src.buffer = noiseBuffers[noiseType]
+    src.buffer = cachedNoise[noiseType]
     src.loop = true
     return src
 }
@@ -170,12 +173,11 @@ var noiseTypes = {
     np: 'np',
     nb: 'nb',
 }
-var noiseBuffers = {}
 
 
 
 
-function createNoiseBuffer(type) {
+function createNoiseBuffer(ctx, type) {
     var noiseLen = {
         n0: 1,
         n1: 1.5,
@@ -252,7 +254,7 @@ function makeMetallicNoise(data) {
 
 var addHarmonics = (data, r1, r2, scale) => {
     var max = 0
-    var posScale = 2 * Math.PI * 440 / ctx.sampleRate
+    var posScale = 2 * Math.PI * 440 / 44100
     var phase1 = Math.random() * 2 * Math.PI
     var phase2 = Math.random() * 2 * Math.PI
     for (var i = 0; i < data.length; i++) {

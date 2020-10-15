@@ -65,7 +65,6 @@ export default function Generator(audioContext, destination, noCompressor, silen
         time = time || soon()
         releaseTime = releaseTime || 0
         destNode = destNode || compressor || currDest
-        program = conformProgram(program)
         var noteID = player.play(program, freq, vel, time, releaseTime, destNode)
         return noteID
     }
@@ -159,25 +158,6 @@ export default function Generator(audioContext, destination, noCompressor, silen
 
 
 
-
-
-    /*
-     * 
-     *      minimal amount of conformance on program input
-     *      just enforce it to be an array of objects
-     * 
-    */
-
-    function conformProgram(prog) {
-        if (!Array.isArray(prog)) prog = []
-        for (var i = 0; i < prog.length; i++) {
-            if (typeof prog[i] === 'object') continue
-            prog.splice(i, 1)
-            i--
-        }
-        if (prog.length === 0) prog.push({})
-        return prog
-    }
 
 
 

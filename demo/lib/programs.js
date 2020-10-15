@@ -184,10 +184,11 @@ function stringToProgram(str) {
     var rand = (a, b) => Math.min(a, b) + Math.abs(b - a) * Math.random()
     var parsed
     try {
-        parsed = eval(`var rand = ${rand};  ${str}`)
+        parsed = eval(`var rand = ${rand};  (${str})`)
     } catch (e) { }
-    var okay = parsed && parsed.length && parsed[0]
-    if (okay) parsed.forEach(o => okay = okay && (typeof o === 'object'))
+    var okay = !!parsed
+    // var okay = parsed && parsed.length && parsed[0]
+    // if (okay) parsed.forEach(o => okay = okay && (typeof o === 'object'))
     return (okay) ? parsed : null
 }
 

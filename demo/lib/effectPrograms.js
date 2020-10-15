@@ -22,11 +22,11 @@ export var effectPrograms = {
             freq.push({ p: 2, q: rand(0.2, 0.5) })
             sweepLen += freq[2].q
         }
-        return [{
+        return {
             type,
             freq,
             gain: { t: t, a: 0.01, d: sweepLen / 2, s: 0, r: 0.15 }
-        }]
+        }
     },
 
 
@@ -38,11 +38,12 @@ export var effectPrograms = {
         if (select(0, 1)) freq.push({
             w: rand(0.05, 0.1), p: rand(1.1, 1.2), q: 0.01,
         })
-        return [{
-            type: select('square', 'triangle', 'w9999', 'saw'),
-            freq,
-            gain: { t: 0.5, a: 0.01, s: 0, d: 0.5, r: 0.1 }
-        }]
+        var type = select('square', 'triangle', 'w9999', 'saw')
+        var t = (type === 'square') ? 0.4 : 0.8
+        return {
+            type, freq,
+            gain: { t: t, a: 0.01, s: 0, d: 0.5, r: 0.1 }
+        }
     },
 
 
@@ -61,12 +62,12 @@ export var effectPrograms = {
                 rand(5, 20),
                 { p: rand(1, 2), q: 0.5 }
             ],
-            gain: rand(0.05, 0.3),
+            gain: { t: rand(0.05, 0.3) },
         })
         return [{
             type: select('triangle', 'sine', 'w999', 'w99999'),
             freq,
-            gain: { t: 0.5, a: 0.01, d: 0.3, s: 0, r: 0.15 }
+            gain: { t: 0.8, a: 0.01, d: 0.3, s: 0, r: 0.15 }
         }]
     },
 
@@ -77,7 +78,7 @@ export var effectPrograms = {
         return [{
             type: 'np',
             gain: [
-                { t: 0.5, a: 0.01, d: 0.7, s: 0, r: 0.2 },
+                { t: 0.8, a: 0.01, d: 0.7, s: 0, r: 0.2 },
                 {
                     type: 'sine',
                     freq: { t: 0, f: rand(10, 30), p: rand(1, 4), q: rand(0.2, 0.6) },
@@ -91,6 +92,7 @@ export var effectPrograms = {
                 p: rand(0.1, 0.3),
                 q: rand(0.2, 0.6),
             },
+            effect: 'crush-' + (rand(2, 8)) | 0,
         }]
     },
 
@@ -100,10 +102,10 @@ export var effectPrograms = {
     bonk: () => [
         {
             type: 'n0',
-            gain: { a: 0, d: 0.05, s: 0, r: 0.02 }
+            gain: { a: 0.005, s: 0, dr: 0.02 }
         },
-        { type: 'lowpass', freq: { t: 2 }, Q: 10 },
-        { type: 'highpass', freq: { t: 0.5 }, Q: 10 },
+        { type: 'lowpass', freq: { t: rand(1.5, 5) }, Q: rand(2, 15) },
+        { type: 'highpass', freq: { t: rand(0.2, 0.8) }, Q: rand(2, 15) },
     ],
 
 

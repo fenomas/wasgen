@@ -1,5 +1,5 @@
 
-import { buildSignal } from './builders/signals'
+import { buildSources } from './lib/sources'
 import Enveloper from 'param-enveloper'
 
 
@@ -161,34 +161,24 @@ export default function SoundPlayer(ctx) {
 
         var note = new Note(time)
 
-        var currDest = ctx.createGain()
-        note.nodes.push(currDest)
+        // build all sources for the root-level program
+        var node = buildSources(ctx, note, program, freq, time, 'root')
 
-        for (var i = 0; i < program.length; i++) {
-            // top level node, will either be a source or a filter
-            var signalProg = program[i]
-            var node = buildSignal(ctx, note, signalProg, freq, time, '', true)
-            if (node.Q || node.curve || node.isWorklet) {
-                // insert a new filter into output chain
-                currDest.connect(node)
-                currDest = ctx.createGain()
-                note.nodes.push(currDest)
-                node.connect(currDest)
-            } else {
-                // add a new source (in parallel) to the output chain
-                node.connect(currDest)
-            }
+        // edge case when program contained no sources
+        if (!node) {
+            var prog = { type: 'sine' }
+            node = buildSources(ctx, note, prog, freq, time, 'root')
         }
 
         // output chain is finished
         if (vel === 1) {
-            currDest.connect(dest)
+            node.connect(dest)
         } else {
-            var out = ctx.createGain()
-            note.nodes.push(out)
-            out.gain.value = (vel < 1) ? vel * vel : vel
-            currDest.connect(out)
-            out.connect(dest)
+            var volume = ctx.createGain()
+            note.nodes.push(volume)
+            volume.gain.value = (vel < 1) ? vel * vel : vel
+            node.connect(volume)
+            volume.connect(dest)
         }
 
         return note
