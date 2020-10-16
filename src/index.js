@@ -9,6 +9,7 @@
 
 import SoundPlayer from './soundPlayer'
 import { initializeWorklet } from './builders/crusher'
+import { version } from '../package.json'
 
 
 
@@ -22,7 +23,7 @@ import { initializeWorklet } from './builders/crusher'
 
 export default function Generator(audioContext, destination, noCompressor, silent) {
     var self = this
-    self.version = require('../package.json').version
+    self.version = version
     if (!silent) console.log(`wasgen     v${self.version}`)
 
 
