@@ -58,11 +58,15 @@ export function startNote(note) {
     if (ctx.state !== 'running') ctx.resume()
     if (noteIDs[note]) return
     var freq = noteToFreq(note)
+    // special ad-hoc case for demoing
+    var overrideNote = currentProgram.center || 0
+    if (currentProgram[0]) overrideNote = currentProgram[0].center || 0
+    if (overrideNote) freq = noteToFreq(overrideNote)
     // support case where text field has array of programs, for demoing...
     if (Array.isArray(currentProgram[0])) {
         var now = gen.now()
         noteIDs[note] = currentProgram.map(prog => {
-            var delay = prog[0].delay || 0
+            var delay = (prog[0] && prog[0].delay) || 0
             return gen.play(prog, freq, velocity, now + delay)
         })
     } else {
