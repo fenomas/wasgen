@@ -138,7 +138,8 @@ async function importWorkletModule(ctx, moduleName) {
     var className = /class (.+) extends/.exec(moduleStr)[1]
     moduleStr += `; registerProcessor('${moduleName}', ${className})`
     try {
-        await ctx.resume()
+        // don't resume if given an offline context
+        if (!ctx.startRendering) await ctx.resume()
         var blob = new Blob([moduleStr], { type: 'application/javascript' })
         var url = URL.createObjectURL(blob)
         await ctx.audioWorklet.addModule(url)

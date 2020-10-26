@@ -38,12 +38,16 @@ export default function Generator(audioContext, destination, noCompressor, silen
     var player = new SoundPlayer(ctx)
 
     var checkContext = () => {
+        if (ctx.startRendering) return // skip for offline contexts
         if (ctx.state !== 'running') ctx.resume()
         initializeWorklet(ctx)
     }
 
     var currDest = destination || ctx.destination
 
+
+    // when given offline context, init immediately
+    if (ctx.startRendering) initializeWorklet(ctx)
 
 
 
