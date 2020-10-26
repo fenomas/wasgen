@@ -190,6 +190,9 @@ function applyProgram(param, prog, info, freq) {
             addHold(info, param, w)
             paramTime += w
             debug('- wait for', w)
+
+            // if t/f will modify param, but no ramp is needed, imply one
+            if ((t !== 1 || f !== 0) && (a < 0)) a = 0
         }
 
         // update param value
