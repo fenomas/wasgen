@@ -1,6 +1,6 @@
 {
   "name": "wasgen",
-  "version": "0.17.1",
+  "version": "0.17.2",
   "description": "Web Audio Sound Generator",
   "main": "src/index.js",
   "files": [
