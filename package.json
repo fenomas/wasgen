@@ -1,6 +1,6 @@
 {
   "name": "wasgen",
-  "version": "0.17.0",
+  "version": "0.17.1",
   "description": "Web Audio Sound Generator",
   "main": "src/index.js",
   "files": [
@@ -13,7 +13,7 @@
   "author": "andy@fenomas.com",
   "license": "ISC",
   "dependencies": {
-    "param-enveloper": "^0.2.0"
+    "param-enveloper": "^0.3.0"
   },
   "devDependencies": {
     "webaudio-viz": "0.2.0"

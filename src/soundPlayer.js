@@ -1,7 +1,7 @@
 
 import { buildSources } from './lib/sources'
-import Enveloper from 'param-enveloper'
-
+// import Enveloper from 'param-enveloper'
+import Enveloper from '../../param-enveloper'
 
 export default function SoundPlayer(ctx) {
 

@@ -67,7 +67,7 @@ export default function Generator(audioContext, destination, noCompressor, silen
         checkContext()
         freq = freq || 440
         vel = vel || 1
-        time = time || soon()
+        time = (typeof time === 'number') ? time : soon()
         releaseTime = releaseTime || 0
         destNode = destNode || compressor || currDest
         var noteID = player.play(program, freq, vel, time, releaseTime, destNode)
