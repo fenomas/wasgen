@@ -7,8 +7,8 @@
     "/src"
   ],
   "scripts": {
-    "start": "cd demo && webpack-dev-server",
-    "build": "cd demo && webpack -p"
+    "start": "cd demo && webpack serve",
+    "build": "cd demo && webpack --env prod"
   },
   "author": "andy@fenomas.com",
   "license": "ISC",

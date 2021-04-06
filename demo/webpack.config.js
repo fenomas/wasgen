@@ -7,7 +7,7 @@ var buildPath = path.resolve('..', 'docs')
 module.exports = (env) => ({
 
     mode: (() => {
-        return (env && env.production) ?
+        return (env && env.prod) ?
             'production' : 'development'
     })(),
 
