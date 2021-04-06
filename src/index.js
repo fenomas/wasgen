@@ -9,8 +9,9 @@
 
 import SoundPlayer from './soundPlayer'
 import { initializeWorklet } from './builders/crusher'
-import { version } from '../package.json'
 
+import packageData from '../package.json'
+var version = packageData.version
 
 
 /*
