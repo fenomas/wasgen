@@ -22,10 +22,12 @@ var version = packageData.version
  * 
 */
 
-export default function Generator(audioContext, destination, noCompressor, silent) {
-    var self = this
-    self.version = version
-    if (!silent) console.log(`wasgen     v${self.version}`)
+export default function Generator(
+    audioContext = null, destination = null,
+    noCompressor = false, silent = false) {
+
+    this.version = version
+    if (!silent) console.log(`wasgen     v${this.version}`)
 
 
     /*
@@ -35,7 +37,7 @@ export default function Generator(audioContext, destination, noCompressor, silen
     */
 
     var ctx = audioContext ||
-        new (window.AudioContext || window.webkitAudioContext)()
+        new (window.AudioContext || window['webkitAudioContext'])()
     var player = new SoundPlayer(ctx)
 
     var checkContext = () => {
@@ -64,7 +66,7 @@ export default function Generator(audioContext, destination, noCompressor, silen
 
     var soon = () => ctx.currentTime + 0.05
 
-    this.play = function (program, freq, vel, time, releaseTime, destNode) {
+    this.play = function (program, freq = 440, vel = 1, time = 0, releaseTime = 0, destNode = null) {
         checkContext()
         freq = freq || 440
         vel = vel || 1
@@ -75,14 +77,14 @@ export default function Generator(audioContext, destination, noCompressor, silen
         return noteID
     }
 
-    this.bend = function (noteID, freq, timeConst, time) {
+    this.bend = function (noteID, freq = 440, timeConst = 0.1, time = 0) {
         freq = freq || 440
         timeConst = timeConst || 0.1
         time = time || soon()
         player.bend(noteID, freq, timeConst, time)
     }
 
-    this.release = function (noteID, time) {
+    this.release = function (noteID, time = 0) {
         time = time || soon()
         player.release(noteID, time)
     }
@@ -91,7 +93,7 @@ export default function Generator(audioContext, destination, noCompressor, silen
         return player.isPlaying(noteID)
     }
 
-    this.releaseAll = function (time) {
+    this.releaseAll = function (time = 0) {
         time = time || soon()
         player.releaseAll(time)
     }
@@ -111,7 +113,7 @@ export default function Generator(audioContext, destination, noCompressor, silen
         return ctx.currentTime
     }
 
-    this.maxVoices = function (n) {
+    this.maxVoices = function (n = 32) {
         if (n) player.maxVoices = n
         return player.maxVoices
     }
@@ -145,7 +147,7 @@ export default function Generator(audioContext, destination, noCompressor, silen
      * 
     */
 
-    function initCompressor() {
+    var initCompressor = () => {
         if (compressor) compressor.disconnect()
         if (noCompressor) return
         compressor = ctx.createDynamicsCompressor()
@@ -155,7 +157,7 @@ export default function Generator(audioContext, destination, noCompressor, silen
         compressor.attack.value = 0.003     // 0.003
         compressor.release.value = 0.25     // 0.25
         compressor.connect(currDest)
-        self.compressor = compressor
+        this.compressor = compressor
     }
 
     var compressor = null

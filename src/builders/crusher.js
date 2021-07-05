@@ -45,8 +45,8 @@ export function createCrusher(ctx, type) {
     var node = new AudioWorkletNode(ctx, MODULE_NAME)
     node.parameters.get('depth').value = depth
     node.parameters.get('freq').value = freq
-    window.MY_AUDIO_WORKLET = node
-    node.isWorklet = true
+    window['MY_AUDIO_WORKLET'] = node
+    node['isWorklet'] = true
     return node
 }
 

@@ -1,14 +1,17 @@
 {
   "name": "wasgen",
-  "version": "0.17.3",
+  "version": "0.17.4",
   "description": "Web Audio Sound Generator",
   "main": "src/index.js",
+  "typings": "dist/src/index.d.ts",
   "files": [
-    "/src"
+    "/src",
+    "/dist"
   ],
   "scripts": {
     "start": "cd demo && webpack serve",
-    "build": "cd demo && webpack --env prod"
+    "types": "tsc",
+    "build": "tsc; cd demo && webpack --env prod"
   },
   "author": "andy@fenomas.com",
   "license": "ISC",
