@@ -109,7 +109,10 @@ export function applyParam(ctx, param, note, freq, time, prog, type, target, nee
 
 
 // helpers
-function isNum(v) { return !isNaN(v) }
+function isNum(v) {
+    if (typeof v !== 'number') return false
+    return !isNaN(v)
+}
 
 function conformEnvProperty(val, def, canBeNeg, aliasVal) {
     if (typeof aliasVal !== 'undefined') val = aliasVal
