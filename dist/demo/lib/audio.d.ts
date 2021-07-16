@@ -1,0 +1,10 @@
+export function startNote(note: any): void;
+export function bendNote(originalNote: any, toNote: any): void;
+export function releaseNote(note: any, delay?: number): void;
+export function setVelocity(v: any): void;
+export function setCompression(comp: any): void;
+export function getGenerator(): Generator;
+export function exportWavFile(freq?: number, noteDur?: number, fileDur?: number): Promise<void>;
+export var ctx: any;
+export var audioDestination: any;
+import Generator from "../..";
