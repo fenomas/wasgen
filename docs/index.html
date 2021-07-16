@@ -62,6 +62,7 @@
 		canvas {
 			display: block;
 			border: 1px solid gray;
+			padding: 1px;
 			width: 450px;
 			height: 200px;
 			user-select: none;
@@ -76,7 +77,7 @@
 		}
 
 		#progText {
-			width: 500px;
+			width: 450px;
 			min-width: 450px;
 			height: 10rem;
 			font: 300 13px monospace;
@@ -89,6 +90,21 @@
 			width: 2rem;
 			font-size: 18px;
 			margin: 0;
+			text-align: center;
+		}
+
+		#exportFreq,
+		#exportNoteDur,
+		#exportFileDur {
+			width: 4rem;
+			font-size: 15px;
+			margin: 2px;
+			text-align: center;
+		}
+
+		#export {
+			font-size: 16px;
+			margin: 5px 2px;
 			text-align: center;
 		}
 
@@ -136,6 +152,18 @@
 			<button id="benchmark">Benchmark</button>
 			<canvas class="item" id="viz"></canvas>
 			<label id="vizLabel">(click to toggle visualizer)</label>
+		</div>
+	</div>
+	<div class="item" style="clear:both;">
+		Sound file export:
+		<div class="item">
+			<input type="text" id="exportFreq" value="440">
+			Frequency
+			<br><input type="text" id="exportNoteDur" value="0.5">
+			Note duration (sec)
+			<br><input type="text" id="exportFileDur" value="5">
+			File duration (sec)
+			<br><button id="export">Export WAV file</button>
 		</div>
 	</div>
 

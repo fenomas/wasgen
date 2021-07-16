@@ -1,4 +1,4 @@
-
+// @ts-check
 
 // inits audio context and core audio-playing logic
 import './lib/audio'

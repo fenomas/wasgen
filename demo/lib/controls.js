@@ -1,4 +1,4 @@
-
+// @ts-check
 
 
 /*
@@ -9,9 +9,10 @@
 
 import { setVelocity } from './audio'
 
+/** @type {any} */
 var veltext = document.querySelector('#velnum')
 document.querySelector('#vel').addEventListener('input', ev => {
-    var vel = parseFloat(ev.target.value)
+    var vel = parseFloat(ev.target['value'])
     setVelocity(vel)
     veltext.value = Math.round(vel * 100) / 100
 })
@@ -28,7 +29,7 @@ document.querySelector('#vel').addEventListener('input', ev => {
 import { setCompression } from './audio'
 
 document.querySelector('#compress').addEventListener('input', ev => {
-    setCompression(ev.target.checked)
+    setCompression(ev.target['checked'])
 })
 
 
@@ -42,8 +43,8 @@ document.querySelector('#compress').addEventListener('input', ev => {
  * 
 */
 
-document.querySelector('#play').onpointerdown = ev => playEvent(ev, true)
-document.querySelector('#play').onpointerup = ev => playEvent(ev, false)
+document.querySelector('#play')['onpointerdown'] = ev => playEvent(ev, true)
+document.querySelector('#play')['onpointerup'] = ev => playEvent(ev, false)
 window.onkeydown = ev => playEvent(ev, true)
 window.onkeyup = ev => playEvent(ev, false)
 
@@ -71,7 +72,7 @@ function playEvent(ev, down) {
 
     // bail if focused on UI elements
     var focused = document.activeElement
-    if (focused.type && focused.type.includes('text')) return
+    if (focused['type'] && focused['type'].includes('text')) return
     if (focused.tagName === 'SELECT') {
         if (!/arrow/i.test(ev.key)) ev.preventDefault()
     }
@@ -171,7 +172,56 @@ setInterval(function () {
     if (lastEdited < lastPlayed) return // no changes to play
     startNote(lastNotePlayed)
     releaseNote(lastNotePlayed, 0.5)
+    updateExportSettings(0, 0.5)
     lastPlayed = t
 }, 250)
 
+
+
+
+
+/*
+ * 
+ *      WAV file export
+ * 
+ *      export UI tracks frequency and duration of 
+ *      any note played
+ * 
+*/
+
+import { exportWavFile } from './audio'
+
+var exportFreq = 440
+var noteDur = 0.5
+var freqInput = document.querySelector('#exportFreq')
+var noteDurInput = document.querySelector('#exportNoteDur')
+var fileDurInput = document.querySelector('#exportFileDur')
+var exportBut = document.querySelector('#export')
+
+export function updateExportSettings(freq = 0, dur = 0) {
+    if (freq > 0) {
+        freq = Math.round(freq)
+        exportFreq = freq
+        freqInput['value'] = exportFreq
+    }
+    if (dur > 0) {
+        dur = ((n) => {
+            if (n > 10) return Math.round(n * 10) / 10
+            if (n > 1) return Math.round(n * 100) / 100
+            if (n < 0.01) return Math.round(n * 1000) / 1000
+            return Math.round(n * 1000) / 1000
+        })(dur) || 0.001
+        noteDur = dur
+        noteDurInput['value'] = noteDur
+    }
+}
+
+exportBut['onclick'] = () => {
+    if (!OfflineAudioContext) {
+        exportBut['textContent'] = 'Not supported in your browser, sorry!'
+        return
+    }
+    var fileDur = parseFloat(fileDurInput['value']) || 5
+    exportWavFile(exportFreq, noteDur, fileDur)
+}
 

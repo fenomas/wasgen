@@ -1,3 +1,5 @@
+// @ts-check
+
 import { pingAutoPlay } from "./controls"
 
 
@@ -8,6 +10,7 @@ import { pingAutoPlay } from "./controls"
 */
 
 
+/** @type {any} */
 export var currentProgram = [{}]
 var programStr = ''
 
@@ -80,10 +83,11 @@ programStr = programToString(currentProgram)
  * 
 */
 
+/** @type {any} */
 var textEl = document.querySelector('#progText')
 textEl.value = programStr
 textEl.addEventListener('input', ev => {
-    var newProg = stringToProgram(ev.target.value)
+    var newProg = stringToProgram(ev.target['value'])
     textEl.style.backgroundColor = (newProg) ? '#fff' : '#fee'
     if (newProg) {
         pingAutoPlay(true)

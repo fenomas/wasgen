@@ -1,6 +1,6 @@
 {
   "name": "wasgen",
-  "version": "0.17.4",
+  "version": "0.17.5",
   "description": "Web Audio Sound Generator",
   "main": "src/index.js",
   "typings": "dist/src/index.d.ts",
@@ -19,6 +19,7 @@
     "param-enveloper": "^0.3.0"
   },
   "devDependencies": {
+    "audiobuffer-to-wav": "^1.0.0",
     "webaudio-viz": "0.2.0"
   }
 }
