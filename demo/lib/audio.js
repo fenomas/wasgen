@@ -9,9 +9,11 @@
 */
 
 export var ctx = new (window.AudioContext || window['webkitAudioContext'])()
-export var audioDestination = ctx.createGain()
+export var monitorNode = ctx.createGain()
+var masterVol = ctx.createGain()
 
-audioDestination.connect(ctx.destination)
+monitorNode.connect(masterVol)
+masterVol.connect(ctx.destination)
 
 
 
@@ -26,12 +28,12 @@ audioDestination.connect(ctx.destination)
 
 import Generator from '../..'
 var noCompressor = false
-var gen = new Generator(ctx, audioDestination, noCompressor)
+var gen = new Generator(ctx, monitorNode, noCompressor)
 window['gen'] = gen
 
 function rebuildGen() {
     if (gen) gen.dispose()
-    gen = new Generator(ctx, audioDestination, noCompressor)
+    gen = new Generator(ctx, monitorNode, noCompressor)
     window['gen'] = gen
 }
 
@@ -114,6 +116,10 @@ function noteToFreq(note) {
 
 // for UI to access
 export function setVelocity(v) { velocity = v }
+export function setVolume(v) {
+    var t = ctx.currentTime
+    masterVol.gain.setTargetAtTime(v, t + 0.1, 0.1)
+}
 export function setCompression(comp) {
     noCompressor = !comp
     rebuildGen()

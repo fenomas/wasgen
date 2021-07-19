@@ -1,7 +1,7 @@
 
 
 import Viz from 'webaudio-viz'
-import { ctx, audioDestination } from './audio'
+import { ctx, monitorNode } from './audio'
 
 
 
@@ -10,7 +10,7 @@ var fps = 20
 var mode = 0
 var canvas = document.querySelector('#viz')
 var label = document.querySelector('#vizLabel')
-var viz = new Viz(ctx, canvas, audioDestination, fps, mode)
+var viz = new Viz(ctx, canvas, monitorNode, fps, mode)
 
 
 
@@ -33,7 +33,7 @@ export function setVisualizerNode(node) {
     if (node) {
         viz.setInput(node)
     } else {
-        viz.setInput(audioDestination)
+        viz.setInput(monitorNode)
     }
 }
 

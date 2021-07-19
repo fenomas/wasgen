@@ -7,7 +7,7 @@
  * 
 */
 
-import { setVelocity } from './audio'
+import { setVelocity, setVolume } from './audio'
 
 /** @type {any} */
 var veltext = document.querySelector('#velnum')
@@ -15,6 +15,14 @@ document.querySelector('#vel').addEventListener('input', ev => {
     var vel = parseFloat(ev.target['value'])
     setVelocity(vel)
     veltext.value = Math.round(vel * 100) / 100
+})
+
+/** @type {any} */
+var voltext = document.querySelector('#volnum')
+document.querySelector('#vol').addEventListener('input', ev => {
+    var vol = parseFloat(ev.target['value'])
+    setVolume(vol)
+    voltext.value = Math.round(vol * 100) / 100
 })
 
 

@@ -34,6 +34,12 @@
 			margin: 0.8rem 0.5rem;
 		}
 
+		.label-slider {
+			display: inline-block;
+			margin: 0;
+			width: 3em;
+		}
+
 		label {
 			cursor: pointer;
 			user-select: none;
@@ -55,6 +61,7 @@
 		}
 
 		#play {
+			vertical-align: top;
 			padding: 0.5rem;
 			width: 180px;
 		}
@@ -86,11 +93,18 @@
 			resize: both;
 		}
 
-		#velnum {
+		#velnum,
+		#volnum {
 			width: 2rem;
-			font-size: 18px;
+			font-size: 16px;
 			margin: 0;
 			text-align: center;
+		}
+
+		#vel,
+		#vol {
+			width: 6rem;
+			vertical-align: middle;
 		}
 
 		#exportFreq,
@@ -124,11 +138,15 @@
 		<div class="column">
 			<div class="item">
 				<button id="play">Play sound</button>
-				<label class="item-inline">
-					Velocity
+				<div class="item-inline" style="margin: 0.2rem;">
+					<label class="label-slider">Velocity</label>
 					<input type="range" id="vel" value="1" min="0.01" max="1" step="0.01">
 					<input type="text" id="velnum" value="1">
-				</label>
+					<br>
+					<label class="label-slider">Volume</label>
+					<input type="range" id="vol" value="1" min="0.01" max="1" step="0.01">
+					<input type="text" id="volnum" value="1">
+				</div>
 			</div>
 			<div class="item">
 				<label>
