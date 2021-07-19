@@ -11,7 +11,7 @@ export var effectPrograms = {
 
     jump: function () {
         var type = select('square', 'triangle', 'w9999')
-        var t = (type === 'square') ? 0.4 : 0.8
+        var t = (type === 'square') ? 0.1 : 0.3
         var freq = [
             { t: 0.5, p: 2, q: rand(0.4, 0.6) },
         ]
@@ -39,7 +39,7 @@ export var effectPrograms = {
             w: rand(0.05, 0.1), p: rand(1.1, 1.2), q: 0.01,
         })
         var type = select('square', 'triangle', 'w9999', 'saw')
-        var t = (type === 'square') ? 0.4 : 0.8
+        var t = (type === 'square') ? 0.1 : 0.3
         return {
             type, freq,
             gain: { t: t, a: 0.01, s: 0, d: 0.5, r: 0.1 }
@@ -67,7 +67,7 @@ export var effectPrograms = {
         return [{
             type: select('triangle', 'sine', 'w999', 'w99999'),
             freq,
-            gain: { t: 0.8, a: 0.01, d: 0.3, s: 0, r: 0.15 }
+            gain: { t: 0.3, a: 0.01, d: 0.3, s: 0, r: 0.15 }
         }]
     },
 
@@ -78,7 +78,7 @@ export var effectPrograms = {
         return [{
             type: 'np',
             gain: [
-                { t: 0.8, a: 0.01, d: 0.7, s: 0, r: 0.2 },
+                { t: 0.4, a: 0.01, d: 0.7, s: 0, r: 0.2 },
                 {
                     type: 'sine',
                     freq: { t: 0, f: rand(10, 30), p: rand(1, 4), q: rand(0.2, 0.6) },
@@ -102,7 +102,7 @@ export var effectPrograms = {
     bonk: () => [
         {
             type: 'n0',
-            gain: { a: 0.005, s: 0, dr: 0.02 }
+            gain: { t: 0.4, a: 0.005, s: 0, dr: 0.02, k: -0.5 }
         },
         { type: 'lowpass', freq: { t: rand(1.5, 5) }, Q: rand(2, 15) },
         { type: 'highpass', freq: { t: rand(0.2, 0.8) }, Q: rand(2, 15) },
@@ -115,11 +115,11 @@ export var effectPrograms = {
         {
             type: 'sine',
             freq: { p: 0.3, q: 0.1 },
-            gain: { a: 0, h: 0, s: 0, d: 0.1, r: 0.1 },
+            gain: { t: 0.3, a: 0, h: 0, s: 0, d: 0.1, r: 0.1 },
         }, {
             type: 'square',
             freq: { t: 0.5 },
-            gain: { t: 0.25, a: 0, h: 0, s: 0, d: 0.05, r: 0.02 },
+            gain: { t: 0.1, a: 0, h: 0, s: 0, d: 0.05, r: 0.03 },
         },
     ],
 
@@ -130,7 +130,7 @@ export var effectPrograms = {
         {
             type: 'n1',
             freq: select({}, { t: 0, f: rand(440, 880) }),
-            gain: { a: 0, s: 0, h: 0, d: rand(0.02, 0.1), r: 0.05 }
+            gain: { t: 0.3, a: 0, s: 0, h: 0, d: rand(0.02, 0.1), r: 0.05 }
         }, {
             type: 'highpass',
             freq: { t: 2 },
@@ -144,7 +144,7 @@ export var effectPrograms = {
     wind: () => [
         {
             type: 'n0',
-            gain: { a: 1, h: 0, d: 0, s: 1, r: 0.5 },
+            gain: { t: 0.2, a: 1, h: 0, d: 0, s: 1, r: 0.5 },
         }, {
             type: 'lowpass',
             Q: rand(1, 10),
