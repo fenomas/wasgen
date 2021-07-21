@@ -9,14 +9,14 @@ audio graph and its parameters.
 This library will then construct all the nodes, connect everything, 
 apply the necessary parameters and envelopes, and clean up afterwards.
 
-[Live demo](https://andyhall.github.io/wasgen/) ← open that and hit keys to play sounds.
+[Live demo](https://fenomas.github.io/wasgen/) ← open that and hit keys to play sounds.
 
 <br>
 
 > NOTE!  
 > Are you reasonably familiar with terms like "FM synthesis" and 
 > "ADSR envelope"? If not, you may find 
-> [`wafxr`](https://andyhall.github.io/wafxr) more useful than 
+> [`wafxr`](https://fenomas.github.io/wafxr) more useful than 
 > this library.
 
 
@@ -61,7 +61,7 @@ And so on. See source for other APIs
 
 Sound programs for `wasgen` use an ad-hoc format that's 
 easy to read but hard to describe. You may find it easiest to 
-open the [demo page](https://andyhall.github.io/wasgen/) and 
+open the [demo page](https://fenomas.github.io/wasgen/) and 
 browse the examples to get the general idea.
 
 For the full details:

@@ -1,7 +1,7 @@
 
 /*!
  * wasgen: a web audio sound generator
- * @url      github.com/andyhall/wasgen
+ * @url      github.com/fenomas/wasgen
  * @author   Andy Hall <andy@fenomas.com>
  * @license  ISC
  */

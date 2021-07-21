@@ -15,6 +15,7 @@
   },
   "author": "andy@fenomas.com",
   "license": "ISC",
+  "repository": "github:fenomas/wasgen",
   "dependencies": {
     "param-enveloper": "^0.3.0"
   },
