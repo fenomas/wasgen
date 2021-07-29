@@ -94,8 +94,9 @@ class BitcrushProcessor extends Object {
     process(inputs, outputs, parameters) {
         var input = inputs[0]
         var output = outputs[0]
-        var steps = parameters.depth[0] / 2
+        var steps = parameters.depth[0]
         var freq = parameters.freq[0]
+        var scale = steps + 0.4999
         var invsteps = 1 / steps
         var phase = this.phase
         var sample = this.sample
@@ -107,7 +108,7 @@ class BitcrushProcessor extends Object {
                 phase += freq
                 if (phase >= 1) {
                     phase -= 1
-                    sample = Math.round((channelIn[j] + 1) * steps) * invsteps - 1
+                    sample = Math.round(channelIn[j] * scale) * invsteps
                 }
                 channelOut[j] = sample
             }

@@ -75,10 +75,10 @@ For the full details:
 
 ## Recent updates
 
- * `0.16.0`
-   * simplifies program format, and many internals
- * `0.12.0`
-   * adds bit-crushing, bug fixes
+ * `0.18.0` Fixes `bitcrusher` and adds `tanh` distortion
+ * `0.17.0` Supports playing into OfflineAudioContext
+ * `0.16.0` simplifies program format, and many internals
+ * `0.12.0` adds bit-crushing, bug fixes
  * `0.10.0`
    * adds waveshaper distortion effects
    * rewrites most documentation

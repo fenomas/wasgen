@@ -20,7 +20,7 @@ export function createShaper(ctx, type) {
     var arr = type.split('-')
     var curveType = arr[1]
     var numArg = parseFloat(arr[2])
-    if (typeof numArg !== 'number') numArg = 5
+    if (isNaN(numArg)) numArg = 5
     if (!curveCreators[curveType]) {
         console.warn('unknown curve type: ' + curveType)
         curveType = 'linear'
@@ -49,6 +49,9 @@ var curveCache = {}
 var curveCreators = {}
 
 
+
+
+
 curveCreators.linear = (num) => {
     // fallback, no distortion
     return new Float32Array([-1, 1])
@@ -58,6 +61,18 @@ curveCreators.clip = (num) => {
     var v = num / 10
     return new Float32Array([-v, -v, 0, v, v])
 }
+
+curveCreators.tanh = (num) => {
+    var scale = 0.5 * clamp(1, num, 40)
+    var N = 255
+    var arr = new Float32Array(N)
+    for (var i = 0; i < arr.length; i++) {
+        var x = 2 * (i / (N - 1)) - 1
+        arr[i] = Math.tanh(x * scale)
+    }
+    return arr
+}
+
 
 curveCreators.boost = (num) => {
     var ct = Math.ceil(num / 2)
@@ -77,12 +92,13 @@ curveCreators.fold = (num) => {
 
 curveCreators.crush = (depth) => {
     depth = clamp(1, depth, 40)
-    var steps = depth / 2
+    var steps = depth
     var N = 255
     var arr = new Float32Array(N)
     for (var i = 0; i < N; i++) {
-        var x = -1 + 2 * (i / (N - 1))
-        arr[i] = Math.round((x + 1) * steps) / steps - 1
+        var x = 2 * (i / (N - 1)) - 1
+        arr[i] = Math.round(x * (steps + 0.4999)) / steps
+        if (Math.abs(arr[i]) < 0.001) arr[i] = 0
     }
     return arr
 }
@@ -90,12 +106,12 @@ curveCreators.crush = (depth) => {
 
 
 curveCreators.thin = (num) => {
-    var pow = 1 + num
+    var pow = 1 + num / 2
     pow = clamp(1.5, pow, 20)
     var N = 255
     var arr = new Float32Array(N)
     for (var i = 0; i < N; i++) {
-        var x = -1 + 2 * i / (N - 1)
+        var x = 2 * (i / (N - 1)) - 1
         if (x > 0) {
             arr[i] = mix(0, 1, x, pow)
         } else {
@@ -113,7 +129,7 @@ curveCreators.fat = (num) => {
     var N = 255
     var arr = new Float32Array(N)
     for (var i = 0; i < N; i++) {
-        var x = -1 + 2 * i / (N - 1)
+        var x = 2 * (i / (N - 1)) - 1
         if (x > 0) {
             arr[i] = mix(0, 1, x, pow)
         } else {

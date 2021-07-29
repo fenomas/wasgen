@@ -142,6 +142,7 @@ Here are all the currently supported effect `type` values:
    * `shape-thin-#` - wave shaper distortion
    * `shape-boost-#` - wave shaper distortion
    * `shape-crush-#` - wave shaper distortion
+   * `shape-tanh-#` - wave shaper distortion
 
 
 When you define multiple `effect` elements in an array, they will be chained 
