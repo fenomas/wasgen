@@ -6,7 +6,7 @@ import Enveloper from 'param-enveloper'
 
 
 var DEBUG = 0
-var MIN_ATTACK_RAMP = 0.001
+var MIN_ATTACK_RAMP = 0.0001
 
 
 
@@ -36,7 +36,7 @@ export function applyParam(ctx, param, note, freq, time, prog, type, target, nee
     // otherwise arrayify
     var progList = (Array.isArray(prog)) ? prog : [prog]
 
-    // implicit starting value for parameter
+    // implicit values for parameter
     var initValue = (type === 'freq') ? freq : 1
     if (type === 'gain' && target === 'freq') initValue = freq
 
@@ -50,7 +50,7 @@ export function applyParam(ctx, param, note, freq, time, prog, type, target, nee
         startTime: time,
         sweeping: false,
         releaseTime: -1,
-        releaseTarget: +0,
+        releaseTarget: (type === 'freq') ? -1 : 0,
     }
 
     // generate any sources needed for this param program
@@ -71,6 +71,11 @@ export function applyParam(ctx, param, note, freq, time, prog, type, target, nee
         debug('- default attack ramp:')
         var rampProg = { a: defaultValues.a }
         applyProgram(param, rampProg, info, freq)
+    }
+
+    // add a release target if none exists
+    if (info.releaseTarget < 0) {
+        info.releaseTarget = info.currValue
     }
 
     if (!info.envStarted) {
@@ -198,11 +203,14 @@ function applyProgram(param, prog, info, freq) {
             if ((t !== 1 || f !== 0) && (a < 0)) a = 0
         }
 
+        // if attack ramp is coming, need to init param before t/f
+        if (a >= 0) initEnvIfNeeded(info, param, paramVal)
+
         // update param value
         if (i > 0) paramVal = info.enveloper.getValueAtTime(param, paramTime)
         paramVal = paramVal * t + f
 
-        // ad-hoc special case - in repeas, make falling freqs reflect
+        // ad-hoc special case - in repeats, make falling freqs reflect
         var reflectAt = 80
         if (info.type === 'freq' && paramVal < reflectAt && f < 0) {
             paramVal = 2 * reflectAt - paramVal
@@ -210,7 +218,6 @@ function applyProgram(param, prog, info, freq) {
         }
 
         if (a >= 0) {
-            initEnvIfNeeded(info, param, paramVal)
             if (info.sweeping) addHold(info, param, 0)
             info.enveloper.addRamp(param, a, paramVal)
             info.attackRampNeeded = false
@@ -228,6 +235,7 @@ function applyProgram(param, prog, info, freq) {
         if (s !== 1) {
             initEnvIfNeeded(info, param, paramVal)
             paramVal *= s
+            if (info.sweeping) addHold(info, param, 0)
             info.enveloper.addSweep(param, -1, paramVal, d)
             info.sweeping = true
             debug('- open sweep to', paramVal, 'const', d)
