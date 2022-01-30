@@ -199,8 +199,6 @@ setInterval(function () {
 
 import { exportWavFile } from './audio'
 
-var exportFreq = 440
-var noteDur = 0.5
 var freqInput = document.querySelector('#exportFreq')
 var noteDurInput = document.querySelector('#exportNoteDur')
 var fileDurInput = document.querySelector('#exportFileDur')
@@ -208,9 +206,8 @@ var exportBut = document.querySelector('#export')
 
 export function updateExportSettings(freq = 0, dur = 0) {
     if (freq > 0) {
-        freq = Math.round(freq)
-        exportFreq = freq
-        freqInput['value'] = exportFreq
+        freq = Math.round(freq * 100) / 100
+        freqInput['value'] = freq
     }
     if (dur > 0) {
         dur = ((n) => {
@@ -219,8 +216,7 @@ export function updateExportSettings(freq = 0, dur = 0) {
             if (n < 0.01) return Math.round(n * 1000) / 1000
             return Math.round(n * 1000) / 1000
         })(dur) || 0.001
-        noteDur = dur
-        noteDurInput['value'] = noteDur
+        noteDurInput['value'] = dur
     }
 }
 
@@ -229,7 +225,21 @@ exportBut['onclick'] = () => {
         exportBut['textContent'] = 'Not supported in your browser, sorry!'
         return
     }
-    var fileDur = parseFloat(fileDurInput['value']) || 5
-    exportWavFile(exportFreq, noteDur, fileDur)
+    var freq = parseFloat(freqInput['value'])
+    if (!(freq > 1)) {
+        freqInput['value'] = '440'
+        freq = 440
+    }
+    var noteDur = parseFloat(noteDurInput['value'])
+    if (!(noteDur > 0.001)) {
+        noteDurInput['value'] = '0.5'
+        noteDur = 0.5
+    }
+    var fileDur = parseFloat(fileDurInput['value'])
+    if (!(fileDur > 0.001)) {
+        fileDurInput['value'] = '5.0'
+        fileDur = 5.0
+    }
+    exportWavFile(freq, noteDur, fileDur)
 }
 
