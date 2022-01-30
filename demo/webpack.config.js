@@ -17,10 +17,9 @@ module.exports = (env) => ({
         path: buildPath,
         filename: 'bundle.js',
     },
+    stats: "minimal",
     devServer: {
-        contentBase: buildPath,
-        inline: true,
+        static: buildPath,
         host: "0.0.0.0",
-        stats: "minimal",
     },
 })

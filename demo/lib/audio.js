@@ -38,8 +38,9 @@ function rebuildGen() {
 }
 
 // @ts-ignore
-if (module.hot) module.hot.accept('..', () => {
-    // @ts-ignore
+if (module.hot) module.hot.accept('../..', () => {
+    // @ts-ignore  
+    // eslint-disable-next-line
     Generator = require('../..')
     rebuildGen()
 })
