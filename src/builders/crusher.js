@@ -135,8 +135,11 @@ async function importWorkletModule(ctx, moduleName) {
     var moduleStr = BitcrushProcessor.toString()
     // look away if you don't like dirty hacks
     moduleStr = moduleStr.replace('extends Object', 'extends AudioWorkletProcessor')
-    // class name may be minified
-    var className = /class (.+) extends/.exec(moduleStr)[1]
+    // insert fixed class name, in original was minified
+    var className = 'BitcrushProcessor'
+    moduleStr = moduleStr.replace(
+        /^class\s*\w* extends/,
+        `class ${className} extends`)
     moduleStr += `; registerProcessor('${moduleName}', ${className})`
     try {
         // don't resume if given an offline context
