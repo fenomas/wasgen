@@ -52,9 +52,9 @@ function setProgram(ev) {
     textEl.value = programToString(currentProgram)
     pingAutoPlay(true)
 }
-presetsPD.addEventListener('change', ev => setProgram(ev))
-effectsPD.addEventListener('change', ev => setProgram(ev))
-redoEffect.addEventListener('click', ev => setProgram({ target: effectsPD }))
+if (presetsPD) presetsPD.addEventListener('change', ev => setProgram(ev))
+if (effectsPD) effectsPD.addEventListener('change', ev => setProgram(ev))
+if (redoEffect) redoEffect.addEventListener('click', ev => setProgram({ target: effectsPD }))
 
 
 // intial state - presets [0]
@@ -88,7 +88,7 @@ var textEl = document.querySelector('#progText')
 textEl.value = programStr
 textEl.addEventListener('input', ev => {
     var newProg = stringToProgram(ev.target['value'])
-    textEl.style.backgroundColor = (newProg) ? '#fff' : '#fee'
+    textEl.style.backgroundColor = (newProg) ? '' : '#fdd'
     if (newProg) {
         pingAutoPlay(true)
         currentProgram = newProg

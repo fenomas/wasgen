@@ -47,7 +47,7 @@ if (module.hot) module.hot.accept('../..', () => {
 
 
 var versionSpan = document.querySelector('#version-label')
-versionSpan.innerHTML = `wasgen v${gen.version}`
+if (versionSpan) versionSpan.innerHTML = `wasgen v${gen.version}`
 
 
 
