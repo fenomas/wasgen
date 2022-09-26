@@ -23,8 +23,10 @@ var version = packageData.version
 */
 
 export default function Generator(
-    audioContext = null, destination = null,
-    noCompressor = false, silent = false) {
+    audioContext = null,
+    destination = null,
+    noCompressor = false,
+    silent = false) {
 
     this.version = version
     if (!silent) console.log(`wasgen     v${this.version}`)
@@ -70,7 +72,7 @@ export default function Generator(
         checkContext()
         freq = freq || 440
         vel = vel || 1
-        time = (typeof time === 'number') ? time : soon()
+        if (!(time > 0)) time = soon()
         releaseTime = releaseTime || 0
         destNode = destNode || compressor || currDest
         var noteID = player.play(program, freq, vel, time, releaseTime, destNode)
