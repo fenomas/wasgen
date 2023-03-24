@@ -138,7 +138,7 @@ async function importWorkletModule(ctx, moduleName) {
     // insert fixed class name, in original was minified
     var className = 'BitcrushProcessor'
     moduleStr = moduleStr.replace(
-        /^class\s*\w* extends/,
+        /^class .+ extends/,
         `class ${className} extends`)
     moduleStr += `; registerProcessor('${moduleName}', ${className})`
     try {
