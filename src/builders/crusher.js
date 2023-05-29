@@ -78,47 +78,51 @@ export function initializeWorklet(ctx) {
  * 
 */
 
-// class to be used
-class BitcrushProcessor extends Object {
-    constructor() {
-        super()
-        this.phase = 0
-        this.sample = 0
-    }
-    static get parameterDescriptors() {
-        return [
-            { name: 'depth', defaultValue: 5, minValue: 1, maxValue: 20 },
-            { name: 'freq', defaultValue: 0.2, minValue: 0.01, maxValue: 1 },
-        ]
-    }
-    process(inputs, outputs, parameters) {
-        var input = inputs[0]
-        var output = outputs[0]
-        var steps = parameters.depth[0]
-        var freq = parameters.freq[0]
-        var scale = steps + 0.4999
-        var invsteps = 1 / steps
-        var phase = this.phase
-        var sample = this.sample
-
-        for (var i = 0; i < input.length; i++) {
-            var channelIn = input[i]
-            var channelOut = output[i]
-            for (var j = 0; j < channelIn.length; j++) {
-                phase += freq
-                if (phase >= 1) {
-                    phase -= 1
-                    sample = Math.round(channelIn[j] * scale) * invsteps
-                }
-                channelOut[j] = sample
-            }
+// this function exists only to get stringified
+function bitcrushClassContainer() {
+    // @ts-ignore
+    class BitcrushProcessor extends AudioWorkletProcessor {
+        constructor() {
+            super()
+            this.phase = 0
+            this.sample = 0
         }
-        this.phase = phase
-        this.sample = sample
-        return true
-    }
-}
+        static get parameterDescriptors() {
+            return [
+                { name: 'depth', defaultValue: 5, minValue: 1, maxValue: 20 },
+                { name: 'freq', defaultValue: 0.2, minValue: 0.01, maxValue: 1 },
+            ]
+        }
+        process(inputs, outputs, parameters) {
+            var input = inputs[0]
+            var output = outputs[0]
+            var steps = parameters.depth[0]
+            var freq = parameters.freq[0]
+            var scale = steps + 0.4999
+            var invsteps = 1 / steps
+            var phase = this.phase
+            var sample = this.sample
 
+            for (var i = 0; i < input.length; i++) {
+                var channelIn = input[i]
+                var channelOut = output[i]
+                for (var j = 0; j < channelIn.length; j++) {
+                    phase += freq
+                    if (phase >= 1) {
+                        phase -= 1
+                        sample = Math.round(channelIn[j] * scale) * invsteps
+                    }
+                    channelOut[j] = sample
+                }
+            }
+            this.phase = phase
+            this.sample = sample
+            return true
+        }
+    }
+    // @ts-ignore
+    registerProcessor('MODULE_NAME', BitcrushProcessor)
+}
 
 
 
@@ -131,20 +135,16 @@ class BitcrushProcessor extends Object {
 
 async function importWorkletModule(ctx, moduleName) {
     if (!ctx.audioWorklet) return false
-    // string version of module to import
-    var moduleStr = BitcrushProcessor.toString()
-    // look away if you don't like dirty hacks
-    moduleStr = moduleStr.replace('extends Object', 'extends AudioWorkletProcessor')
-    // insert fixed class name, in original was minified
-    var className = 'BitcrushProcessor'
-    moduleStr = moduleStr.replace(
-        /^class .+ extends/,
-        `class ${className} extends`)
-    moduleStr += `; registerProcessor('${moduleName}', ${className})`
+    // stringified function with class and invocation
+    var moduleFnStr = bitcrushClassContainer.toString()
+        .replace('MODULE_NAME', moduleName)
+    var iifeStr = `(${moduleFnStr})()`
     try {
         // don't resume if given an offline context
         if (!ctx.startRendering) await ctx.resume()
-        var blob = new Blob([moduleStr], { type: 'application/javascript' })
+        var blob = new Blob([iifeStr], {
+            type: 'application/javascript'
+        })
         var url = URL.createObjectURL(blob)
         await ctx.audioWorklet.addModule(url)
     } catch (e) {
